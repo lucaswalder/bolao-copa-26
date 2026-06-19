@@ -154,6 +154,46 @@ var ArrowUp = createLucideIcon("arrow-up", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Brain = createLucideIcon("brain", [
+	["path", {
+		d: "M12 18V5",
+		key: "adv99a"
+	}],
+	["path", {
+		d: "M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4",
+		key: "1e3is1"
+	}],
+	["path", {
+		d: "M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5",
+		key: "1gqd8o"
+	}],
+	["path", {
+		d: "M17.997 5.125a4 4 0 0 1 2.526 5.77",
+		key: "iwvgf7"
+	}],
+	["path", {
+		d: "M18 18a4 4 0 0 0 2-7.464",
+		key: "efp6ie"
+	}],
+	["path", {
+		d: "M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517",
+		key: "1gq6am"
+	}],
+	["path", {
+		d: "M6 18a4 4 0 0 1-2-7.464",
+		key: "k1g0md"
+	}],
+	["path", {
+		d: "M6.003 5.125a4 4 0 0 0-2.526 5.77",
+		key: "q97ue3"
+	}]
+]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CalendarDays = createLucideIcon("calendar-days", [
 	["path", {
 		d: "M8 2v4",
@@ -224,6 +264,19 @@ var CircleCheck = createLucideIcon("circle-check", [["circle", {
 }], ["path", {
 	d: "m9 12 2 2 4-4",
 	key: "dzmm74"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Crown = createLucideIcon("crown", [["path", {
+	d: "M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z",
+	key: "1vdc57"
+}], ["path", {
+	d: "M5 21h14",
+	key: "11awu3"
 }]]);
 /**
 * @license lucide-react v0.577.0 - ISC
@@ -333,6 +386,19 @@ var Medal = createLucideIcon("medal", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Pencil = createLucideIcon("pencil", [["path", {
+	d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+	key: "1a8usu"
+}], ["path", {
+	d: "m15 5 4 4",
+	key: "1mk7zo"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var RotateCcw = createLucideIcon("rotate-ccw", [["path", {
 	d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8",
 	key: "1357e3"
@@ -360,6 +426,21 @@ var Save = createLucideIcon("save", [
 		key: "t51u73"
 	}]
 ]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Search = createLucideIcon("search", [["path", {
+	d: "m21 21-4.34-4.34",
+	key: "14j7rj"
+}], ["circle", {
+	cx: "11",
+	cy: "11",
+	r: "8",
+	key: "4ej97u"
+}]]);
 /**
 * @license lucide-react v0.577.0 - ISC
 *
@@ -509,4 +590,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ArrowLeft as _, ShieldCheck as a, Medal as c, ListFilter as d, Flag as f, ArrowUp as g, CalendarDays as h, Swords as i, LogOut as l, Check as m, UserPlus as n, Save as o, CircleCheck as p, Trophy as r, RotateCcw as s, X as t, Lock as u, ArrowDown as v };
+export { ArrowDown as S, Check as _, ShieldCheck as a, ArrowUp as b, RotateCcw as c, LogOut as d, Lock as f, CircleCheck as g, Crown as h, Swords as i, Pencil as l, Flag as m, UserPlus as n, Search as o, ListFilter as p, Trophy as r, Save as s, X as t, Medal as u, CalendarDays as v, ArrowLeft as x, Brain as y };

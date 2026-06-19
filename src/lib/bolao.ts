@@ -373,13 +373,71 @@ function resolveX1Winner(
   return { winnerId, loserId, loserPoints: loserResult.points }
 }
 
-// Ranking ao vivo: soma os pontos dos palpites e aplica os ajustes de X1
-// (vencedor ganha o stake; perdedor perde o stake e os pontos da partida).
+type ChampionPickRow = {
+  userId: string
+  team: string
+  bonusPoints: number
+}
+
+// Fases do torneio em ordem, com o bonus do "Guru do Futebol" disponivel
+// enquanto aquela fase e a mais avancada ja iniciada. A Final bloqueia palpites.
+const CHAMPION_PHASES = [
+  { round: 'Fase de grupos', points: 50 },
+  { round: '16 avos de final', points: 40 },
+  { round: 'Oitavas de final', points: 30 },
+  { round: 'Quartas de final', points: 20 },
+  { round: 'Semifinal', points: 10 },
+] as const
+
+// Fase atual do torneio = a mais avancada que ja teve algum jogo iniciado.
+// Quando a Final comeca, o palpite de campeao fica bloqueado.
+function getChampionPhase(matchRows: { round: string; startsAt: Date }[]) {
+  const now = Date.now()
+  const hasStarted = (round: string) =>
+    matchRows.some(
+      (match) => match.round === round && match.startsAt.getTime() <= now,
+    )
+
+  if (hasStarted('Final')) {
+    return { label: 'Final', points: null as number | null, locked: true }
+  }
+
+  let current: { round: string; points: number } = CHAMPION_PHASES[0]
+  for (const phase of CHAMPION_PHASES) {
+    if (hasStarted(phase.round)) current = phase
+  }
+
+  return {
+    label: current.round,
+    points: current.points as number | null,
+    locked: false,
+  }
+}
+
+// Campeao = vencedor da Final, quando o resultado ja foi confirmado.
+function getChampionTeam(matchById: Map<string, MatchRow>) {
+  for (const match of matchById.values()) {
+    if (
+      match.round === 'Final' &&
+      match.homeScore !== null &&
+      match.awayScore !== null
+    ) {
+      return getMatchWinner(match)
+    }
+  }
+
+  return null
+}
+
+// Ranking ao vivo: soma os pontos dos palpites, aplica os ajustes de X1
+// (vencedor ganha o stake; perdedor perde o stake e os pontos da partida) e
+// soma o bonus de campeao para quem cravou o vencedor da Copa.
 function computeStandings(
   userRows: PlayerRow[],
   guessRows: GuessRow[],
   matchById: Map<string, MatchRow>,
   challengeRows: ChallengeRow[],
+  championPicks: ChampionPickRow[] = [],
 ) {
   const guessByKey = new Map<string, GuessRow>()
   for (const guess of guessRows) {
@@ -434,6 +492,15 @@ function computeStandings(
     if (loserEntry) loserEntry.points -= challenge.stake + loserPoints
   }
 
+  const championTeam = getChampionTeam(matchById)
+  if (championTeam) {
+    for (const pick of championPicks) {
+      if (pick.team !== championTeam) continue
+      const entry = tally.get(pick.userId)
+      if (entry) entry.points += pick.bonusPoints
+    }
+  }
+
   return [...tally.values()]
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points
@@ -448,46 +515,67 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
   async () => {
     await ensureSeedMatches()
 
-    const [{ asc }, { db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] =
-      await Promise.all([
-        import('drizzle-orm'),
-        import('#/db'),
-        import('#/db/schema'),
-      ])
+    const [
+      { asc },
+      { db },
+      {
+        guesses,
+        matches,
+        user,
+        rankingSnapshots,
+        x1Challenges,
+        championPicks,
+      },
+    ] = await Promise.all([
+      import('drizzle-orm'),
+      import('#/db'),
+      import('#/db/schema'),
+    ])
     const sessionUser = await getSessionUser()
 
-    const [matchRows, guessRows, userRows, snapshotRows, challengeRows] =
-      await Promise.all([
-        db.select().from(matches).orderBy(asc(matches.startsAt)),
-        db
-          .select({
-            id: guesses.id,
-            userId: guesses.userId,
-            matchId: guesses.matchId,
-            homeScore: guesses.homeScore,
-            awayScore: guesses.awayScore,
-          })
-          .from(guesses),
-        db
-          .select({ id: user.id, name: user.name, email: user.email })
-          .from(user),
-        db
-          .select({
-            userId: rankingSnapshots.userId,
-            position: rankingSnapshots.position,
-          })
-          .from(rankingSnapshots),
-        db
-          .select({
-            id: x1Challenges.id,
-            matchId: x1Challenges.matchId,
-            challengerId: x1Challenges.challengerId,
-            opponentId: x1Challenges.opponentId,
-            stake: x1Challenges.stake,
-            status: x1Challenges.status,
-          })
-          .from(x1Challenges),
-      ])
+    const [
+      matchRows,
+      guessRows,
+      userRows,
+      snapshotRows,
+      challengeRows,
+      championPickRows,
+    ] = await Promise.all([
+      db.select().from(matches).orderBy(asc(matches.startsAt)),
+      db
+        .select({
+          id: guesses.id,
+          userId: guesses.userId,
+          matchId: guesses.matchId,
+          homeScore: guesses.homeScore,
+          awayScore: guesses.awayScore,
+        })
+        .from(guesses),
+      db.select({ id: user.id, name: user.name, email: user.email }).from(user),
+      db
+        .select({
+          userId: rankingSnapshots.userId,
+          position: rankingSnapshots.position,
+        })
+        .from(rankingSnapshots),
+      db
+        .select({
+          id: x1Challenges.id,
+          matchId: x1Challenges.matchId,
+          challengerId: x1Challenges.challengerId,
+          opponentId: x1Challenges.opponentId,
+          stake: x1Challenges.stake,
+          status: x1Challenges.status,
+        })
+        .from(x1Challenges),
+      db
+        .select({
+          userId: championPicks.userId,
+          team: championPicks.team,
+          bonusPoints: championPicks.bonusPoints,
+        })
+        .from(championPicks),
+    ])
 
     await refreshKnockoutTeams(matchRows)
 
@@ -508,6 +596,7 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
       guessRows,
       matchById,
       challengeRows,
+      championPickRows,
     ).map((player) => {
       const previousPosition = previousPositionByUser.get(player.id) ?? null
       return {
@@ -877,32 +966,42 @@ export const saveMatchResult = createServerFn({ method: 'POST' })
 // Calcula o ranking atual e persiste a posicao de cada usuario em
 // ranking_snapshots (uma linha por usuario, sobrescrita).
 async function snapshotStandings() {
-  const [{ db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] =
-    await Promise.all([import('#/db'), import('#/db/schema')])
+  const [
+    { db },
+    { guesses, matches, user, rankingSnapshots, x1Challenges, championPicks },
+  ] = await Promise.all([import('#/db'), import('#/db/schema')])
 
-  const [matchRows, guessRows, userRows, challengeRows] = await Promise.all([
-    db.select().from(matches),
-    db
-      .select({
-        id: guesses.id,
-        userId: guesses.userId,
-        matchId: guesses.matchId,
-        homeScore: guesses.homeScore,
-        awayScore: guesses.awayScore,
-      })
-      .from(guesses),
-    db.select({ id: user.id, name: user.name, email: user.email }).from(user),
-    db
-      .select({
-        id: x1Challenges.id,
-        matchId: x1Challenges.matchId,
-        challengerId: x1Challenges.challengerId,
-        opponentId: x1Challenges.opponentId,
-        stake: x1Challenges.stake,
-        status: x1Challenges.status,
-      })
-      .from(x1Challenges),
-  ])
+  const [matchRows, guessRows, userRows, challengeRows, championPickRows] =
+    await Promise.all([
+      db.select().from(matches),
+      db
+        .select({
+          id: guesses.id,
+          userId: guesses.userId,
+          matchId: guesses.matchId,
+          homeScore: guesses.homeScore,
+          awayScore: guesses.awayScore,
+        })
+        .from(guesses),
+      db.select({ id: user.id, name: user.name, email: user.email }).from(user),
+      db
+        .select({
+          id: x1Challenges.id,
+          matchId: x1Challenges.matchId,
+          challengerId: x1Challenges.challengerId,
+          opponentId: x1Challenges.opponentId,
+          stake: x1Challenges.stake,
+          status: x1Challenges.status,
+        })
+        .from(x1Challenges),
+      db
+        .select({
+          userId: championPicks.userId,
+          team: championPicks.team,
+          bonusPoints: championPicks.bonusPoints,
+        })
+        .from(championPicks),
+    ])
 
   const matchById = new Map(matchRows.map((match) => [match.id, match]))
   const standings = computeStandings(
@@ -910,6 +1009,7 @@ async function snapshotStandings() {
     guessRows,
     matchById,
     challengeRows,
+    championPickRows,
   )
 
   for (const player of standings) {
@@ -1142,6 +1242,132 @@ export const cancelX1Challenge = createServerFn({ method: 'POST' })
       .update(x1Challenges)
       .set({ status: 'cancelled', updatedAt: new Date() })
       .where(eq(x1Challenges.id, challenge.id))
+
+    return { ok: true }
+  })
+
+function getTournamentTeams(matchRows: { round: string; homeTeam: string; awayTeam: string }[]) {
+  const teams = new Set<string>()
+  for (const match of matchRows) {
+    if (match.round !== 'Fase de grupos') continue
+    teams.add(match.homeTeam)
+    teams.add(match.awayTeam)
+  }
+
+  return [...teams].sort((a, b) => a.localeCompare(b))
+}
+
+export const getGuruData = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    await ensureSeedMatches()
+
+    const [{ db }, { matches, user, championPicks }] = await Promise.all([
+      import('#/db'),
+      import('#/db/schema'),
+    ])
+    const sessionUser = await getSessionUser()
+
+    const [matchRows, userRows, pickRows] = await Promise.all([
+      db.select().from(matches),
+      db.select({ id: user.id, name: user.name, email: user.email }).from(user),
+      db
+        .select({
+          userId: championPicks.userId,
+          team: championPicks.team,
+          bonusPoints: championPicks.bonusPoints,
+          phaseLabel: championPicks.phaseLabel,
+        })
+        .from(championPicks),
+    ])
+
+    const phase = getChampionPhase(matchRows)
+    const matchById = new Map(matchRows.map((match) => [match.id, match]))
+    const championTeam = getChampionTeam(matchById)
+    const nameById = new Map(
+      userRows.map((player) => [player.id, player.name || player.email]),
+    )
+
+    const myPick = sessionUser
+      ? pickRows.find((pick) => pick.userId === sessionUser.id) ?? null
+      : null
+
+    return {
+      user: sessionUser
+        ? {
+            id: sessionUser.id,
+            name: sessionUser.name,
+            email: sessionUser.email,
+            isAdmin: isAdminEmail(sessionUser.email),
+          }
+        : null,
+      phase,
+      championTeam,
+      teams: getTournamentTeams(matchRows),
+      pick: myPick
+        ? {
+            team: myPick.team,
+            bonusPoints: myPick.bonusPoints,
+            phaseLabel: myPick.phaseLabel,
+          }
+        : null,
+      picks: pickRows
+        .map((pick) => ({
+          userId: pick.userId,
+          name: nameById.get(pick.userId) ?? 'Jogador',
+          team: pick.team,
+          bonusPoints: pick.bonusPoints,
+          phaseLabel: pick.phaseLabel,
+          isChampion: championTeam !== null && pick.team === championTeam,
+        }))
+        .sort((a, b) => b.bonusPoints - a.bonusPoints || a.name.localeCompare(b.name)),
+    }
+  },
+)
+
+export const saveChampionPick = createServerFn({ method: 'POST' })
+  .validator(z.object({ team: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await ensureSeedMatches()
+
+    const [{ db }, { matches, championPicks }] = await Promise.all([
+      import('#/db'),
+      import('#/db/schema'),
+    ])
+    const sessionUser = await getSessionUser()
+
+    if (!sessionUser) {
+      throw new Error('Voce precisa entrar para palpitar o campeao.')
+    }
+
+    const matchRows = await db.select().from(matches)
+    const phase = getChampionPhase(matchRows)
+
+    if (phase.locked || phase.points === null) {
+      throw new Error('O palpite de campeao ja esta bloqueado (Final).')
+    }
+
+    if (!getTournamentTeams(matchRows).includes(data.team)) {
+      throw new Error('Selecione um time valido.')
+    }
+
+    await db
+      .insert(championPicks)
+      .values({
+        userId: sessionUser.id,
+        team: data.team,
+        bonusPoints: phase.points,
+        phaseLabel: phase.label,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: championPicks.userId,
+        set: {
+          team: data.team,
+          bonusPoints: phase.points,
+          phaseLabel: phase.label,
+          updatedAt: new Date(),
+        },
+      })
 
     return { ok: true }
   })

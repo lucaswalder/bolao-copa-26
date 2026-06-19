@@ -5,6 +5,7 @@ import { useServerFn } from '@tanstack/react-start'
 import {
   ArrowDown,
   ArrowUp,
+  Brain,
   CalendarDays,
   Check,
   Flag,
@@ -12,7 +13,9 @@ import {
   Lock,
   LogOut,
   Medal,
+  Pencil,
   Save,
+  Search,
   ShieldCheck,
   Swords,
   Trophy,
@@ -69,12 +72,32 @@ function Home() {
   const [phase, setPhase] = useState<PhaseFilter>('Todos')
   const [status, setStatus] = useState<StatusFilter>('Próximos')
   const [showPlacar, setShowPlacar] = useState(false)
-  const filteredMatches = data.matches
-    .filter((match) => matchMatchesPhase(match, phase))
-    .filter((match) => matchMatchesStatus(match, status))
-  if (status === 'Finalizados') {
-    filteredMatches.reverse()
+  const [teamQuery, setTeamQuery] = useState('')
+
+  const normalizedQuery = normalizeText(teamQuery.trim())
+  const isSearching = normalizedQuery.length > 0
+
+  let filteredMatches: MatchItem[]
+  if (isSearching) {
+    // Busca por time: todos os jogos (passados e futuros), ignorando os filtros
+    // de fase/status, ordenados por data (asc, como já vem do loader).
+    filteredMatches = data.matches.filter((match) =>
+      matchMatchesTeam(match, normalizedQuery),
+    )
+  } else {
+    filteredMatches = data.matches
+      .filter((match) => matchMatchesPhase(match, phase))
+      .filter((match) => matchMatchesStatus(match, status))
+    if (status === 'Finalizados') {
+      filteredMatches.reverse()
+    }
   }
+
+  const teamOptions = Array.from(
+    new Set(
+      data.matches.flatMap((match) => [match.homeTeam, match.awayTeam]),
+    ),
+  ).sort((a, b) => a.localeCompare(b))
 
   return (
     <main className="min-h-screen px-4 py-6 text-[var(--sea-ink)] sm:px-6 lg:px-8">
@@ -111,29 +134,86 @@ function Home() {
                   {filteredMatches.length} de {data.matches.length} jogos
                 </p>
               </div>
-              {!data.user ? (
-                <Badge variant="secondary" className="gap-1">
-                  <Lock className="size-3.5" />
-                  Entre para salvar
-                </Badge>
-              ) : data.user.isAdmin ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {!data.user ? (
+                  <Badge variant="secondary" className="gap-1">
+                    <Lock className="size-3.5" />
+                    Entre para salvar
+                  </Badge>
+                ) : null}
                 <Link
-                  to="/admin"
+                  to="/guru"
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white"
                 >
-                  <ShieldCheck className="size-4" />
-                  Admin
+                  <Brain className="size-4" />
+                  Guru do Futebol
                 </Link>
-              ) : null}
+                {data.user?.isAdmin ? (
+                  <Link
+                    to="/admin"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white"
+                  >
+                    <ShieldCheck className="size-4" />
+                    Admin
+                  </Link>
+                ) : null}
+              </div>
             </div>
 
-            <PhaseTabs activePhase={phase} onChange={setPhase} data={data} />
-            <StatusTabs activeStatus={status} onChange={setStatus} data={data} />
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--sea-ink-soft)]" />
+              <Input
+                type="search"
+                list="team-options"
+                value={teamQuery}
+                onChange={(event) => setTeamQuery(event.target.value)}
+                placeholder="Buscar time (ex: Brasil) — todos os jogos dele"
+                aria-label="Buscar jogos por time"
+                className="h-11 pl-9"
+              />
+              <datalist id="team-options">
+                {teamOptions.map((team) => (
+                  <option key={team} value={team} />
+                ))}
+              </datalist>
+            </div>
+
+            {isSearching ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-white/65 p-2 pl-3 text-sm font-semibold text-[var(--sea-ink-soft)]">
+                <span>
+                  {filteredMatches.length} jogo(s) com “{teamQuery.trim()}”
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTeamQuery('')}
+                >
+                  <X />
+                  Limpar busca
+                </Button>
+              </div>
+            ) : (
+              <>
+                <PhaseTabs
+                  activePhase={phase}
+                  onChange={setPhase}
+                  data={data}
+                />
+                <StatusTabs
+                  activeStatus={status}
+                  onChange={setStatus}
+                  data={data}
+                />
+              </>
+            )}
 
             <div className="grid gap-4">
               {filteredMatches.length === 0 ? (
                 <p className="rounded-lg border border-[var(--line)] bg-white/65 p-6 text-center text-sm font-semibold text-[var(--sea-ink-soft)]">
-                  Nenhum jogo neste filtro.
+                  {isSearching
+                    ? 'Nenhum jogo encontrado para esse time.'
+                    : 'Nenhum jogo neste filtro.'}
                 </p>
               ) : (
                 filteredMatches.map((match) => (
@@ -201,6 +281,20 @@ function matchMatchesPhase(match: MatchItem, phase: PhaseFilter) {
   if (phase === 'Quartas') return match.round === 'Quartas de final'
 
   return ['Semifinal', 'Disputa de 3º lugar', 'Final'].includes(match.round)
+}
+
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+}
+
+function matchMatchesTeam(match: MatchItem, normalizedQuery: string) {
+  return (
+    normalizeText(match.homeTeam).includes(normalizedQuery) ||
+    normalizeText(match.awayTeam).includes(normalizedQuery)
+  )
 }
 
 function matchMatchesStatus(match: MatchItem, status: StatusFilter) {
@@ -303,35 +397,134 @@ function SessionBox({
   onDone: () => void
 }) {
   if (user) {
-    return (
-      <div className="flex min-w-0 items-center gap-3 rounded-lg border border-white/50 bg-white/70 p-3 shadow-sm">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--sea-ink)] text-sm font-bold text-white">
-          {user.name.charAt(0).toUpperCase() || 'U'}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">{user.name}</p>
-          <p className="truncate text-xs text-[var(--sea-ink-soft)]">
-            {user.email}
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          aria-label="Sair"
-          title="Sair"
-          onClick={async () => {
-            await authClient.signOut()
-            onDone()
-          }}
-        >
-          <LogOut />
-        </Button>
-      </div>
-    )
+    return <UserBox user={user} onDone={onDone} />
   }
 
   return <AuthCard onDone={onDone} />
+}
+
+function UserBox({
+  user,
+  onDone,
+}: {
+  user: NonNullable<BolaoData['user']>
+  onDone: () => void
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [name, setName] = useState(user.name)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSaveName() {
+    const trimmed = name.trim()
+    if (!trimmed) {
+      setError('Informe um nome.')
+      return
+    }
+
+    setError(null)
+    setIsSaving(true)
+    try {
+      const result = await authClient.updateUser({ name: trimmed })
+      if (result.error) {
+        setError(result.error.message || 'Não foi possível salvar o nome.')
+        return
+      }
+      setIsEditing(false)
+      onDone()
+    } catch {
+      setError('Não foi possível salvar o nome.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-white/50 bg-white/70 p-3 shadow-sm">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--sea-ink)] text-sm font-bold text-white">
+          {user.name.charAt(0).toUpperCase() || 'U'}
+        </div>
+        {isEditing ? (
+          <Input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            aria-label="Seu nome"
+            autoFocus
+            maxLength={60}
+            className="h-10 flex-1"
+          />
+        ) : (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold">{user.name}</p>
+            <p className="truncate text-xs text-[var(--sea-ink-soft)]">
+              {user.email}
+            </p>
+          </div>
+        )}
+        {isEditing ? (
+          <>
+            <Button
+              type="button"
+              size="icon"
+              aria-label="Salvar nome"
+              title="Salvar nome"
+              disabled={isSaving}
+              onClick={handleSaveName}
+            >
+              <Check />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              aria-label="Cancelar"
+              title="Cancelar"
+              disabled={isSaving}
+              onClick={() => {
+                setName(user.name)
+                setError(null)
+                setIsEditing(false)
+              }}
+            >
+              <X />
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              aria-label="Editar nome"
+              title="Editar nome"
+              onClick={() => setIsEditing(true)}
+            >
+              <Pencil />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              aria-label="Sair"
+              title="Sair"
+              onClick={async () => {
+                await authClient.signOut()
+                onDone()
+              }}
+            >
+              <LogOut />
+            </Button>
+          </>
+        )}
+      </div>
+      {error ? (
+        <p className="rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 function AuthCard({ onDone }: { onDone: () => void }) {

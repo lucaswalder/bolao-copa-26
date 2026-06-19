@@ -3,7 +3,7 @@ import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tan
 import { f as useRouter, p as isRedirect } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { s as cn } from "./card-BCLLgRQe.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/label-DQKaOuO8.js
+//#region node_modules/.nitro/vite/services/ssr/assets/label-NZw4C8iu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function useServerFn(serverFn) {
@@ -51,14 +51,6 @@ function Button({ className, variant, size, ...props }) {
 		...props
 	});
 }
-function Input({ className, type, ...props }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-		type,
-		"data-slot": "input",
-		className: cn("h-10 w-full rounded-md border border-[var(--line)] bg-white/85 px-3 py-2 text-sm text-[var(--sea-ink)] shadow-sm transition-colors placeholder:text-[var(--sea-ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lagoon)] disabled:cursor-not-allowed disabled:opacity-50", className),
-		...props
-	});
-}
 function Label({ className, ...props }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 		"data-slot": "label",
@@ -67,4 +59,4 @@ function Label({ className, ...props }) {
 	});
 }
 //#endregion
-export { useServerFn as i, Input as n, Label as r, Button as t };
+export { Label as n, useServerFn as r, Button as t };

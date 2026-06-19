@@ -1,13 +1,14 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link, f as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { a as respondX1Challenge, n as createX1Challenge, o as saveGuess, t as cancelX1Challenge } from "./bolao-Dg65kDIJ.mjs";
+import { c as saveGuess, n as createX1Challenge, o as respondX1Challenge, t as cancelX1Challenge } from "./bolao-BzKwpU8o.mjs";
 import { a as CardHeader, i as CardDescription, n as Card, o as CardTitle, r as CardContent, t as Badge } from "./card-BCLLgRQe.mjs";
-import { a as ShieldCheck, c as Medal, d as ListFilter, f as Flag, g as ArrowUp, h as CalendarDays, i as Swords, l as LogOut, m as Check, n as UserPlus, o as Save, r as Trophy, t as X, u as Lock, v as ArrowDown } from "../_libs/lucide-react.mjs";
-import { i as useServerFn, n as Input, r as Label, t as Button } from "./label-DQKaOuO8.mjs";
-import { a as isSafeUrlScheme, d as toKebabCase, i as defu, o as getBaseURL, r as createFetch, u as capitalizeFirstLetter } from "./auth-3txykCZS.mjs";
-import { t as Route } from "./routes-DKhdG8dD.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-HDsXlGas.js
+import { S as ArrowDown, _ as Check, a as ShieldCheck, b as ArrowUp, d as LogOut, f as Lock, i as Swords, l as Pencil, m as Flag, n as UserPlus, o as Search, p as ListFilter, r as Trophy, s as Save, t as X, u as Medal, v as CalendarDays, y as Brain } from "../_libs/lucide-react.mjs";
+import { n as Label, r as useServerFn, t as Button } from "./label-NZw4C8iu.mjs";
+import { t as Input } from "./input-Co4KVR4C.mjs";
+import { a as isSafeUrlScheme, d as toKebabCase, i as defu, o as getBaseURL, r as createFetch, u as capitalizeFirstLetter } from "./auth-QUCxb63E.mjs";
+import { t as Route } from "./routes-DBoDsjzU.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-6KnB-92t.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var PROTO_POLLUTION_PATTERNS = {
@@ -790,8 +791,16 @@ function Home() {
 	const [phase, setPhase] = (0, import_react.useState)("Todos");
 	const [status, setStatus] = (0, import_react.useState)("Próximos");
 	const [showPlacar, setShowPlacar] = (0, import_react.useState)(false);
-	const filteredMatches = data.matches.filter((match) => matchMatchesPhase(match, phase)).filter((match) => matchMatchesStatus(match, status));
-	if (status === "Finalizados") filteredMatches.reverse();
+	const [teamQuery, setTeamQuery] = (0, import_react.useState)("");
+	const normalizedQuery = normalizeText(teamQuery.trim());
+	const isSearching = normalizedQuery.length > 0;
+	let filteredMatches;
+	if (isSearching) filteredMatches = data.matches.filter((match) => matchMatchesTeam(match, normalizedQuery));
+	else {
+		filteredMatches = data.matches.filter((match) => matchMatchesPhase(match, phase)).filter((match) => matchMatchesStatus(match, status));
+		if (status === "Finalizados") filteredMatches.reverse();
+	}
+	const teamOptions = Array.from(new Set(data.matches.flatMap((match) => [match.homeTeam, match.awayTeam]))).sort((a, b) => a.localeCompare(b));
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "min-h-screen px-4 py-6 text-[var(--sea-ink)] sm:px-6 lg:px-8",
 		children: [
@@ -851,31 +860,74 @@ function Home() {
 											" jogos"
 										]
 									})
-								] }), !data.user ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
-									variant: "secondary",
-									className: "gap-1",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-3.5" }), "Entre para salvar"]
-								}) : data.user.isAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
-									to: "/admin",
-									className: "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "size-4" }), "Admin"]
-								}) : null]
+								] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex flex-wrap items-center gap-2",
+									children: [
+										!data.user ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
+											variant: "secondary",
+											className: "gap-1",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-3.5" }), "Entre para salvar"]
+										}) : null,
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+											to: "/guru",
+											className: "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Brain, { className: "size-4" }), "Guru do Futebol"]
+										}),
+										data.user?.isAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+											to: "/admin",
+											className: "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "size-4" }), "Admin"]
+										}) : null
+									]
+								})]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PhaseTabs, {
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--sea-ink-soft)]" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										type: "search",
+										list: "team-options",
+										value: teamQuery,
+										onChange: (event) => setTeamQuery(event.target.value),
+										placeholder: "Buscar time (ex: Brasil) — todos os jogos dele",
+										"aria-label": "Buscar jogos por time",
+										className: "h-11 pl-9"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("datalist", {
+										id: "team-options",
+										children: teamOptions.map((team) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: team }, team))
+									})
+								]
+							}),
+							isSearching ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-white/65 p-2 pl-3 text-sm font-semibold text-[var(--sea-ink-soft)]",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+									filteredMatches.length,
+									" jogo(s) com “",
+									teamQuery.trim(),
+									"”"
+								] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+									type: "button",
+									variant: "ghost",
+									size: "sm",
+									onClick: () => setTeamQuery(""),
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, {}), "Limpar busca"]
+								})]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PhaseTabs, {
 								activePhase: phase,
 								onChange: setPhase,
 								data
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusTabs, {
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusTabs, {
 								activeStatus: status,
 								onChange: setStatus,
 								data
-							}),
+							})] }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "grid gap-4",
 								children: filteredMatches.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									className: "rounded-lg border border-[var(--line)] bg-white/65 p-6 text-center text-sm font-semibold text-[var(--sea-ink-soft)]",
-									children: "Nenhum jogo neste filtro."
+									children: isSearching ? "Nenhum jogo encontrado para esse time." : "Nenhum jogo neste filtro."
 								}) : filteredMatches.map((match) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MatchCard, {
 									match,
 									canGuess: Boolean(data.user),
@@ -929,6 +981,12 @@ function matchMatchesPhase(match, phase) {
 		"Disputa de 3º lugar",
 		"Final"
 	].includes(match.round);
+}
+function normalizeText(value) {
+	return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+function matchMatchesTeam(match, normalizedQuery) {
+	return normalizeText(match.homeTeam).includes(normalizedQuery) || normalizeText(match.awayTeam).includes(normalizedQuery);
 }
 function matchMatchesStatus(match, status) {
 	if (status === "Todos") return true;
@@ -985,38 +1043,112 @@ function PhaseTabs({ activePhase, onChange, data }) {
 	});
 }
 function SessionBox({ user, onDone }) {
-	if (user) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "flex min-w-0 items-center gap-3 rounded-lg border border-white/50 bg-white/70 p-3 shadow-sm",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--sea-ink)] text-sm font-bold text-white",
-				children: user.name.charAt(0).toUpperCase() || "U"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "min-w-0 flex-1",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "truncate text-sm font-bold",
-					children: user.name
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "truncate text-xs text-[var(--sea-ink-soft)]",
-					children: user.email
-				})]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-				type: "button",
-				variant: "secondary",
-				size: "icon",
-				"aria-label": "Sair",
-				title: "Sair",
-				onClick: async () => {
-					await authClient.signOut();
-					onDone();
-				},
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, {})
-			})
-		]
+	if (user) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserBox, {
+		user,
+		onDone
 	});
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthCard, { onDone });
+}
+function UserBox({ user, onDone }) {
+	const [isEditing, setIsEditing] = (0, import_react.useState)(false);
+	const [name, setName] = (0, import_react.useState)(user.name);
+	const [isSaving, setIsSaving] = (0, import_react.useState)(false);
+	const [error, setError] = (0, import_react.useState)(null);
+	async function handleSaveName() {
+		const trimmed = name.trim();
+		if (!trimmed) {
+			setError("Informe um nome.");
+			return;
+		}
+		setError(null);
+		setIsSaving(true);
+		try {
+			const result = await authClient.updateUser({ name: trimmed });
+			if (result.error) {
+				setError(result.error.message || "Não foi possível salvar o nome.");
+				return;
+			}
+			setIsEditing(false);
+			onDone();
+		} catch {
+			setError("Não foi possível salvar o nome.");
+		} finally {
+			setIsSaving(false);
+		}
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex min-w-0 flex-col gap-2 rounded-lg border border-white/50 bg-white/70 p-3 shadow-sm",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex min-w-0 items-center gap-3",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--sea-ink)] text-sm font-bold text-white",
+					children: user.name.charAt(0).toUpperCase() || "U"
+				}),
+				isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+					value: name,
+					onChange: (event) => setName(event.target.value),
+					"aria-label": "Seu nome",
+					autoFocus: true,
+					maxLength: 60,
+					className: "h-10 flex-1"
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "min-w-0 flex-1",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "truncate text-sm font-bold",
+						children: user.name
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "truncate text-xs text-[var(--sea-ink-soft)]",
+						children: user.email
+					})]
+				}),
+				isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					type: "button",
+					size: "icon",
+					"aria-label": "Salvar nome",
+					title: "Salvar nome",
+					disabled: isSaving,
+					onClick: handleSaveName,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					type: "button",
+					variant: "secondary",
+					size: "icon",
+					"aria-label": "Cancelar",
+					title: "Cancelar",
+					disabled: isSaving,
+					onClick: () => {
+						setName(user.name);
+						setError(null);
+						setIsEditing(false);
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, {})
+				})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					type: "button",
+					variant: "secondary",
+					size: "icon",
+					"aria-label": "Editar nome",
+					title: "Editar nome",
+					onClick: () => setIsEditing(true),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pencil, {})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					type: "button",
+					variant: "secondary",
+					size: "icon",
+					"aria-label": "Sair",
+					title: "Sair",
+					onClick: async () => {
+						await authClient.signOut();
+						onDone();
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, {})
+				})] })
+			]
+		}), error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700",
+			children: error
+		}) : null]
+	});
 }
 function AuthCard({ onDone }) {
 	const [mode, setMode] = (0, import_react.useState)("sign-in");

@@ -124,6 +124,17 @@ export const rankingSnapshots = pgTable('ranking_snapshots', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
+export const championPicks = pgTable('champion_picks', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  team: text('team').notNull(),
+  bonusPoints: integer('bonus_points').notNull(),
+  phaseLabel: text('phase_label').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
 export const x1Challenges = pgTable(
   'x1_challenges',
   {

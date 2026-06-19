@@ -1,7 +1,7 @@
 import { r as __exportAll$1 } from "../_runtime.mjs";
 import { C as pgTable, D as boolean, E as integer, S as uniqueIndex, T as text, w as timestamp, x as index } from "../_libs/drizzle-orm.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/schema-P47zgFkJ.js
-var schema_P47zgFkJ_exports = /* @__PURE__ */ __exportAll$1({
+//#region node_modules/.nitro/vite/services/ssr/assets/schema-DQNwXzyd.js
+var schema_DQNwXzyd_exports = /* @__PURE__ */ __exportAll$1({
 	n: () => __commonJSMin,
 	r: () => __exportAll,
 	t: () => schema_exports
@@ -19,6 +19,7 @@ var __exportAll = (all, no_symbols) => {
 };
 var schema_exports = /* @__PURE__ */ __exportAll({
 	account: () => account,
+	championPicks: () => championPicks,
 	guesses: () => guesses,
 	matches: () => matches,
 	rankingSnapshots: () => rankingSnapshots,
@@ -105,6 +106,14 @@ var rankingSnapshots = pgTable("ranking_snapshots", {
 	position: integer("position").notNull(),
 	updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
+var championPicks = pgTable("champion_picks", {
+	userId: text("user_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+	team: text("team").notNull(),
+	bonusPoints: integer("bonus_points").notNull(),
+	phaseLabel: text("phase_label").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
 var x1Challenges = pgTable("x1_challenges", {
 	id: text("id").primaryKey(),
 	matchId: text("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
@@ -116,4 +125,4 @@ var x1Challenges = pgTable("x1_challenges", {
 	updatedAt: timestamp("updated_at").notNull().defaultNow()
 }, (table) => [index("x1_match_idx").on(table.matchId)]);
 //#endregion
-export { schema_exports as i, __exportAll as n, schema_P47zgFkJ_exports as r, __commonJSMin as t };
+export { schema_exports as i, __exportAll as n, schema_DQNwXzyd_exports as r, __commonJSMin as t };

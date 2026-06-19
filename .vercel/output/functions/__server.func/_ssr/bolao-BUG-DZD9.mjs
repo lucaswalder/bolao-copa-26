@@ -1,6 +1,6 @@
 import { n as createServerFn, t as TSS_SERVER_FUNCTION } from "./ssr.mjs";
 import { _ as string, c as boolean, m as object, p as number } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/bolao-Bw5NaF6T.js
+//#region node_modules/.nitro/vite/services/ssr/assets/bolao-BUG-DZD9.js
 var createServerRpc = (serverFnMeta, splitImportFn) => {
 	const url = "/_serverFn/" + serverFnMeta.id;
 	return Object.assign(splitImportFn, {
@@ -185,7 +185,7 @@ function calculatePoints(guess) {
 	};
 }
 async function getSessionUser() {
-	const [{ getRequestHeaders }, { auth }] = await Promise.all([import("./ssr.mjs").then((n) => n.i).then((n) => n.t), import("./auth-3txykCZS.mjs").then((n) => n.n)]);
+	const [{ getRequestHeaders }, { auth }] = await Promise.all([import("./ssr.mjs").then((n) => n.i).then((n) => n.t), import("./auth-QUCxb63E.mjs").then((n) => n.n)]);
 	return (await auth.api.getSession({ headers: getRequestHeaders() }))?.user ?? null;
 }
 function getAdminEmails() {
@@ -204,8 +204,8 @@ async function requireAdminUser() {
 async function ensureSeedMatches() {
 	const [{ eq }, { db }, { matches }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	await db.insert(matches).values(seedMatches).onConflictDoNothing();
 	const existingSeeds = await db.select({
@@ -308,8 +308,8 @@ function resolveTeamSource(source, matchRows) {
 async function refreshKnockoutTeams(matchRows) {
 	const [{ eq }, { db }, { matches }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	for (const match of matchRows) {
 		if (match.round === "Fase de grupos") continue;
@@ -364,7 +364,49 @@ function resolveX1Winner(challenge, match, guessByKey) {
 		loserPoints: loserResult.points
 	};
 }
-function computeStandings(userRows, guessRows, matchById, challengeRows) {
+var CHAMPION_PHASES = [
+	{
+		round: "Fase de grupos",
+		points: 50
+	},
+	{
+		round: "16 avos de final",
+		points: 40
+	},
+	{
+		round: "Oitavas de final",
+		points: 30
+	},
+	{
+		round: "Quartas de final",
+		points: 20
+	},
+	{
+		round: "Semifinal",
+		points: 10
+	}
+];
+function getChampionPhase(matchRows) {
+	const now = Date.now();
+	const hasStarted = (round) => matchRows.some((match) => match.round === round && match.startsAt.getTime() <= now);
+	if (hasStarted("Final")) return {
+		label: "Final",
+		points: null,
+		locked: true
+	};
+	let current = CHAMPION_PHASES[0];
+	for (const phase of CHAMPION_PHASES) if (hasStarted(phase.round)) current = phase;
+	return {
+		label: current.round,
+		points: current.points,
+		locked: false
+	};
+}
+function getChampionTeam(matchById) {
+	for (const match of matchById.values()) if (match.round === "Final" && match.homeScore !== null && match.awayScore !== null) return getMatchWinner(match);
+	return null;
+}
+function computeStandings(userRows, guessRows, matchById, challengeRows, championPicks = []) {
 	const guessByKey = /* @__PURE__ */ new Map();
 	for (const guess of guessRows) guessByKey.set(`${guess.userId}:${guess.matchId}`, guess);
 	const tally = new Map(userRows.map((player) => [player.id, {
@@ -400,6 +442,12 @@ function computeStandings(userRows, guessRows, matchById, challengeRows) {
 		if (winnerEntry) winnerEntry.points += challenge.stake;
 		if (loserEntry) loserEntry.points -= challenge.stake + loserPoints;
 	}
+	const championTeam = getChampionTeam(matchById);
+	if (championTeam) for (const pick of championPicks) {
+		if (pick.team !== championTeam) continue;
+		const entry = tally.get(pick.userId);
+		if (entry) entry.points += pick.bonusPoints;
+	}
 	return [...tally.values()].sort((a, b) => {
 		if (b.points !== a.points) return b.points - a.points;
 		if (b.exactHits !== a.exactHits) return b.exactHits - a.exactHits;
@@ -417,13 +465,13 @@ var getBolaoData_createServerFn_handler = createServerRpc({
 }, (opts) => getBolaoData.__executeServer(opts));
 var getBolaoData = createServerFn({ method: "GET" }).handler(getBolaoData_createServerFn_handler, async () => {
 	await ensureSeedMatches();
-	const [{ asc }, { db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] = await Promise.all([
+	const [{ asc }, { db }, { guesses, matches, user, rankingSnapshots, x1Challenges, championPicks }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await getSessionUser();
-	const [matchRows, guessRows, userRows, snapshotRows, challengeRows] = await Promise.all([
+	const [matchRows, guessRows, userRows, snapshotRows, challengeRows, championPickRows] = await Promise.all([
 		db.select().from(matches).orderBy(asc(matches.startsAt)),
 		db.select({
 			id: guesses.id,
@@ -448,7 +496,12 @@ var getBolaoData = createServerFn({ method: "GET" }).handler(getBolaoData_create
 			opponentId: x1Challenges.opponentId,
 			stake: x1Challenges.stake,
 			status: x1Challenges.status
-		}).from(x1Challenges)
+		}).from(x1Challenges),
+		db.select({
+			userId: championPicks.userId,
+			team: championPicks.team,
+			bonusPoints: championPicks.bonusPoints
+		}).from(championPicks)
 	]);
 	await refreshKnockoutTeams(matchRows);
 	const matchById = new Map(matchRows.map((match) => [match.id, match]));
@@ -456,7 +509,7 @@ var getBolaoData = createServerFn({ method: "GET" }).handler(getBolaoData_create
 	for (const guess of guessRows) guessByKey.set(`${guess.userId}:${guess.matchId}`, guess);
 	const previousPositionByUser = new Map(snapshotRows.map((snapshot) => [snapshot.userId, snapshot.position]));
 	const nameById = new Map(userRows.map((player) => [player.id, player.name || player.email]));
-	const standings = computeStandings(userRows, guessRows, matchById, challengeRows).map((player) => {
+	const standings = computeStandings(userRows, guessRows, matchById, challengeRows, championPickRows).map((player) => {
 		const previousPosition = previousPositionByUser.get(player.id) ?? null;
 		return {
 			...player,
@@ -556,8 +609,8 @@ var getAdminData = createServerFn({ method: "GET" }).handler(getAdminData_create
 	await ensureSeedMatches();
 	const [{ asc }, { db }, { matches }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await requireAdminUser();
 	const matchRows = await db.select().from(matches).orderBy(asc(matches.startsAt));
@@ -590,8 +643,8 @@ var saveGuess = createServerFn({ method: "POST" }).validator(object({
 	await ensureSeedMatches();
 	const [{ eq }, { db }, { guesses, matches }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await getSessionUser();
 	if (!sessionUser) throw new Error("Voce precisa entrar para salvar um palpite.");
@@ -632,8 +685,8 @@ var saveMatchResult = createServerFn({ method: "POST" }).validator(object({
 	await requireAdminUser();
 	const [{ eq }, { db }, { matches }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const match = (await db.select().from(matches).where(eq(matches.id, data.matchId)).limit(1)).at(0);
 	if (!match) throw new Error("Jogo nao encontrado.");
@@ -686,8 +739,8 @@ var saveMatchResult = createServerFn({ method: "POST" }).validator(object({
 	return { ok: true };
 });
 async function snapshotStandings() {
-	const [{ db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] = await Promise.all([import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n), import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)]);
-	const [matchRows, guessRows, userRows, challengeRows] = await Promise.all([
+	const [{ db }, { guesses, matches, user, rankingSnapshots, x1Challenges, championPicks }] = await Promise.all([import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n), import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)]);
+	const [matchRows, guessRows, userRows, challengeRows, championPickRows] = await Promise.all([
 		db.select().from(matches),
 		db.select({
 			id: guesses.id,
@@ -708,9 +761,14 @@ async function snapshotStandings() {
 			opponentId: x1Challenges.opponentId,
 			stake: x1Challenges.stake,
 			status: x1Challenges.status
-		}).from(x1Challenges)
+		}).from(x1Challenges),
+		db.select({
+			userId: championPicks.userId,
+			team: championPicks.team,
+			bonusPoints: championPicks.bonusPoints
+		}).from(championPicks)
 	]);
-	const standings = computeStandings(userRows, guessRows, new Map(matchRows.map((match) => [match.id, match])), challengeRows);
+	const standings = computeStandings(userRows, guessRows, new Map(matchRows.map((match) => [match.id, match])), challengeRows, championPickRows);
 	for (const player of standings) await db.insert(rankingSnapshots).values({
 		userId: player.id,
 		position: player.position,
@@ -736,8 +794,8 @@ var createX1Challenge = createServerFn({ method: "POST" }).validator(object({
 	await ensureSeedMatches();
 	const [{ eq, and, or }, { db }, { matches, user, x1Challenges }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await getSessionUser();
 	if (!sessionUser) throw new Error("Voce precisa entrar para criar um X1.");
@@ -773,8 +831,8 @@ var respondX1Challenge = createServerFn({ method: "POST" }).validator(object({
 })).handler(respondX1Challenge_createServerFn_handler, async ({ data }) => {
 	const [{ eq, and }, { db }, { matches, x1Challenges }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await getSessionUser();
 	if (!sessionUser) throw new Error("Voce precisa entrar para responder um X1.");
@@ -805,8 +863,8 @@ var cancelX1Challenge_createServerFn_handler = createServerRpc({
 var cancelX1Challenge = createServerFn({ method: "POST" }).validator(object({ challengeId: string().min(1) })).handler(cancelX1Challenge_createServerFn_handler, async ({ data }) => {
 	const [{ eq }, { db }, { x1Challenges }] = await Promise.all([
 		import("../_libs/drizzle-orm.mjs").then((n) => n.t),
-		import("./db-CVfCauA_.mjs").then((n) => n.n).then((n) => n.n),
-		import("./schema-P47zgFkJ.mjs").then((n) => n.r).then((n) => n.t)
+		import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n),
+		import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)
 	]);
 	const sessionUser = await getSessionUser();
 	if (!sessionUser) throw new Error("Voce precisa entrar para cancelar um X1.");
@@ -820,5 +878,97 @@ var cancelX1Challenge = createServerFn({ method: "POST" }).validator(object({ ch
 	}).where(eq(x1Challenges.id, challenge.id));
 	return { ok: true };
 });
+function getTournamentTeams(matchRows) {
+	const teams = /* @__PURE__ */ new Set();
+	for (const match of matchRows) {
+		if (match.round !== "Fase de grupos") continue;
+		teams.add(match.homeTeam);
+		teams.add(match.awayTeam);
+	}
+	return [...teams].sort((a, b) => a.localeCompare(b));
+}
+var getGuruData_createServerFn_handler = createServerRpc({
+	id: "fec45bad692ad4d1175fb8a5a2bdd2929165eb0fbb53ba1c2d8755e165bde2fe",
+	name: "getGuruData",
+	filename: "src/lib/bolao.ts"
+}, (opts) => getGuruData.__executeServer(opts));
+var getGuruData = createServerFn({ method: "GET" }).handler(getGuruData_createServerFn_handler, async () => {
+	await ensureSeedMatches();
+	const [{ db }, { matches, user, championPicks }] = await Promise.all([import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n), import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)]);
+	const sessionUser = await getSessionUser();
+	const [matchRows, userRows, pickRows] = await Promise.all([
+		db.select().from(matches),
+		db.select({
+			id: user.id,
+			name: user.name,
+			email: user.email
+		}).from(user),
+		db.select({
+			userId: championPicks.userId,
+			team: championPicks.team,
+			bonusPoints: championPicks.bonusPoints,
+			phaseLabel: championPicks.phaseLabel
+		}).from(championPicks)
+	]);
+	const phase = getChampionPhase(matchRows);
+	const championTeam = getChampionTeam(new Map(matchRows.map((match) => [match.id, match])));
+	const nameById = new Map(userRows.map((player) => [player.id, player.name || player.email]));
+	const myPick = sessionUser ? pickRows.find((pick) => pick.userId === sessionUser.id) ?? null : null;
+	return {
+		user: sessionUser ? {
+			id: sessionUser.id,
+			name: sessionUser.name,
+			email: sessionUser.email,
+			isAdmin: isAdminEmail(sessionUser.email)
+		} : null,
+		phase,
+		championTeam,
+		teams: getTournamentTeams(matchRows),
+		pick: myPick ? {
+			team: myPick.team,
+			bonusPoints: myPick.bonusPoints,
+			phaseLabel: myPick.phaseLabel
+		} : null,
+		picks: pickRows.map((pick) => ({
+			userId: pick.userId,
+			name: nameById.get(pick.userId) ?? "Jogador",
+			team: pick.team,
+			bonusPoints: pick.bonusPoints,
+			phaseLabel: pick.phaseLabel,
+			isChampion: championTeam !== null && pick.team === championTeam
+		})).sort((a, b) => b.bonusPoints - a.bonusPoints || a.name.localeCompare(b.name))
+	};
+});
+var saveChampionPick_createServerFn_handler = createServerRpc({
+	id: "e44b322f32410f84e1bf091ad37ae41784ad44497c361303107076885f0a201f",
+	name: "saveChampionPick",
+	filename: "src/lib/bolao.ts"
+}, (opts) => saveChampionPick.__executeServer(opts));
+var saveChampionPick = createServerFn({ method: "POST" }).validator(object({ team: string().min(1) })).handler(saveChampionPick_createServerFn_handler, async ({ data }) => {
+	await ensureSeedMatches();
+	const [{ db }, { matches, championPicks }] = await Promise.all([import("./db-Bf9xmA-1.mjs").then((n) => n.n).then((n) => n.n), import("./schema-DQNwXzyd.mjs").then((n) => n.r).then((n) => n.t)]);
+	const sessionUser = await getSessionUser();
+	if (!sessionUser) throw new Error("Voce precisa entrar para palpitar o campeao.");
+	const matchRows = await db.select().from(matches);
+	const phase = getChampionPhase(matchRows);
+	if (phase.locked || phase.points === null) throw new Error("O palpite de campeao ja esta bloqueado (Final).");
+	if (!getTournamentTeams(matchRows).includes(data.team)) throw new Error("Selecione um time valido.");
+	await db.insert(championPicks).values({
+		userId: sessionUser.id,
+		team: data.team,
+		bonusPoints: phase.points,
+		phaseLabel: phase.label,
+		updatedAt: /* @__PURE__ */ new Date()
+	}).onConflictDoUpdate({
+		target: championPicks.userId,
+		set: {
+			team: data.team,
+			bonusPoints: phase.points,
+			phaseLabel: phase.label,
+			updatedAt: /* @__PURE__ */ new Date()
+		}
+	});
+	return { ok: true };
+});
 //#endregion
-export { cancelX1Challenge_createServerFn_handler, createX1Challenge_createServerFn_handler, getAdminData_createServerFn_handler, getBolaoData_createServerFn_handler, respondX1Challenge_createServerFn_handler, saveGuess_createServerFn_handler, saveMatchResult_createServerFn_handler };
+export { cancelX1Challenge_createServerFn_handler, createX1Challenge_createServerFn_handler, getAdminData_createServerFn_handler, getBolaoData_createServerFn_handler, getGuruData_createServerFn_handler, respondX1Challenge_createServerFn_handler, saveChampionPick_createServerFn_handler, saveGuess_createServerFn_handler, saveMatchResult_createServerFn_handler };

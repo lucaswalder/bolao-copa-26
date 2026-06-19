@@ -1,6 +1,6 @@
 import { n as createServerFn, r as getServerFnById, t as TSS_SERVER_FUNCTION } from "./ssr.mjs";
 import { _ as string, c as boolean, m as object, p as number } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/bolao-Dg65kDIJ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/bolao-BzKwpU8o.js
 var createSsrRpc = (functionId) => {
 	const url = "/_serverFn/" + functionId;
 	const serverFnMeta = { id: functionId };
@@ -38,5 +38,7 @@ var respondX1Challenge = createServerFn({ method: "POST" }).validator(object({
 	accept: boolean()
 })).handler(createSsrRpc("4deff4110ee7efbb309be401d3db70001ec839a67dcd14d0d5942c9ca76dc871"));
 var cancelX1Challenge = createServerFn({ method: "POST" }).validator(object({ challengeId: string().min(1) })).handler(createSsrRpc("d35208f0ba90f8bb98608fde71f64bd72848f6d260417b0c68a0424a4ec520b9"));
+var getGuruData = createServerFn({ method: "GET" }).handler(createSsrRpc("fec45bad692ad4d1175fb8a5a2bdd2929165eb0fbb53ba1c2d8755e165bde2fe"));
+var saveChampionPick = createServerFn({ method: "POST" }).validator(object({ team: string().min(1) })).handler(createSsrRpc("e44b322f32410f84e1bf091ad37ae41784ad44497c361303107076885f0a201f"));
 //#endregion
-export { respondX1Challenge as a, getBolaoData as i, createX1Challenge as n, saveGuess as o, getAdminData as r, saveMatchResult as s, cancelX1Challenge as t };
+export { getGuruData as a, saveGuess as c, getBolaoData as i, saveMatchResult as l, createX1Challenge as n, respondX1Challenge as o, getAdminData as r, saveChampionPick as s, cancelX1Challenge as t };

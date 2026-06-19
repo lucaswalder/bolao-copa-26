@@ -1,13 +1,14 @@
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
 import { a as HeadContent, i as Scripts, l as createFileRoute, s as createRouter, u as createRootRouteWithContext } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route$2 } from "./admin-BJJrr9k4.mjs";
-import { t as auth } from "./auth-3txykCZS.mjs";
-import { t as Route$3 } from "./routes-DKhdG8dD.mjs";
+import { t as Route$2 } from "./admin-Umtk9dvZ.mjs";
+import { t as auth } from "./auth-QUCxb63E.mjs";
+import { t as Route$3 } from "./guru-BJN6X4Ta.mjs";
+import { t as Route$4 } from "./routes-DBoDsjzU.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as setupRouterSsrQueryIntegration } from "../_libs/@tanstack/react-router-ssr-query+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-Ci7Q5wRn.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DX0EM1kY.js
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-CuoujbbI.css";
+var styles_default = "/assets/styles-BANDALIZ.css";
 var Route$1 = createRootRouteWithContext()({
 	head: () => ({
 		meta: [
@@ -35,18 +36,24 @@ var Route = createFileRoute("/api/auth/$")({ server: { handlers: {
 	GET: ({ request }) => auth.handler(request),
 	POST: ({ request }) => auth.handler(request)
 } } });
+var GuruRoute = Route$3.update({
+	id: "/guru",
+	path: "/guru",
+	getParentRoute: () => Route$1
+});
 var AdminRoute = Route$2.update({
 	id: "/admin",
 	path: "/admin",
 	getParentRoute: () => Route$1
 });
 var rootRouteChildren = {
-	IndexRoute: Route$3.update({
+	IndexRoute: Route$4.update({
 		id: "/",
 		path: "/",
 		getParentRoute: () => Route$1
 	}),
 	AdminRoute,
+	GuruRoute,
 	ApiAuthSplatRoute: Route.update({
 		id: "/api/auth/$",
 		path: "/api/auth/$",
