@@ -115,3 +115,32 @@ export const guesses = pgTable(
     uniqueIndex('guess_user_match_idx').on(table.userId, table.matchId),
   ],
 )
+
+export const rankingSnapshots = pgTable('ranking_snapshots', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const x1Challenges = pgTable(
+  'x1_challenges',
+  {
+    id: text('id').primaryKey(),
+    matchId: text('match_id')
+      .notNull()
+      .references(() => matches.id, { onDelete: 'cascade' }),
+    challengerId: text('challenger_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    opponentId: text('opponent_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    stake: integer('stake').notNull(),
+    status: text('status').notNull().default('pending'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index('x1_match_idx').on(table.matchId)],
+)

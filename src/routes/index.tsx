@@ -3,7 +3,10 @@ import type { FormEvent } from 'react'
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import {
+  ArrowDown,
+  ArrowUp,
   CalendarDays,
+  Check,
   Flag,
   ListFilter,
   Lock,
@@ -11,8 +14,10 @@ import {
   Medal,
   Save,
   ShieldCheck,
+  Swords,
   Trophy,
   UserPlus,
+  X,
 } from 'lucide-react'
 
 import { Badge } from '#/components/ui/badge'
@@ -27,7 +32,13 @@ import {
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { authClient } from '#/lib/auth-client'
-import { getBolaoData, saveGuess } from '#/lib/bolao'
+import {
+  cancelX1Challenge,
+  createX1Challenge,
+  getBolaoData,
+  respondX1Challenge,
+  saveGuess,
+} from '#/lib/bolao'
 
 export const Route = createFileRoute('/')({
   loader: () => getBolaoData(),
@@ -36,6 +47,7 @@ export const Route = createFileRoute('/')({
 
 type BolaoData = Awaited<ReturnType<typeof getBolaoData>>
 type MatchItem = BolaoData['matches'][number]
+type Player = BolaoData['players'][number]
 type PhaseFilter =
   | 'Todos'
   | 'Grupos'
@@ -43,6 +55,7 @@ type PhaseFilter =
   | 'Oitavas'
   | 'Quartas'
   | 'Finais'
+type StatusFilter = 'Próximos' | 'Finalizados' | 'Todos'
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short',
@@ -54,9 +67,14 @@ function Home() {
   const data = Route.useLoaderData()
   const router = useRouter()
   const [phase, setPhase] = useState<PhaseFilter>('Todos')
-  const filteredMatches = data.matches.filter((match) =>
-    matchMatchesPhase(match, phase),
-  )
+  const [status, setStatus] = useState<StatusFilter>('Próximos')
+  const [showPlacar, setShowPlacar] = useState(false)
+  const filteredMatches = data.matches
+    .filter((match) => matchMatchesPhase(match, phase))
+    .filter((match) => matchMatchesStatus(match, status))
+  if (status === 'Finalizados') {
+    filteredMatches.reverse()
+  }
 
   return (
     <main className="min-h-screen px-4 py-6 text-[var(--sea-ink)] sm:px-6 lg:px-8">
@@ -110,15 +128,24 @@ function Home() {
             </div>
 
             <PhaseTabs activePhase={phase} onChange={setPhase} data={data} />
+            <StatusTabs activeStatus={status} onChange={setStatus} data={data} />
 
             <div className="grid gap-4">
-              {filteredMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  canGuess={Boolean(data.user)}
-                />
-              ))}
+              {filteredMatches.length === 0 ? (
+                <p className="rounded-lg border border-[var(--line)] bg-white/65 p-6 text-center text-sm font-semibold text-[var(--sea-ink-soft)]">
+                  Nenhum jogo neste filtro.
+                </p>
+              ) : (
+                filteredMatches.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    canGuess={Boolean(data.user)}
+                    players={data.players}
+                    currentUserId={data.user?.id ?? null}
+                  />
+                ))
+              )}
             </div>
           </div>
 
@@ -128,6 +155,40 @@ function Home() {
           </aside>
         </section>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowPlacar(true)}
+        className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--sea-ink)] px-5 py-3 text-sm font-bold text-white shadow-lg lg:hidden"
+      >
+        <Trophy className="size-4" />
+        Ver placar
+      </button>
+
+      {showPlacar ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 lg:hidden"
+          onClick={() => setShowPlacar(false)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-lg overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-2 flex justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                aria-label="Fechar placar"
+                onClick={() => setShowPlacar(false)}
+              >
+                <X />
+              </Button>
+            </div>
+            <Scoreboard data={data} />
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
@@ -140,6 +201,52 @@ function matchMatchesPhase(match: MatchItem, phase: PhaseFilter) {
   if (phase === 'Quartas') return match.round === 'Quartas de final'
 
   return ['Semifinal', 'Disputa de 3º lugar', 'Final'].includes(match.round)
+}
+
+function matchMatchesStatus(match: MatchItem, status: StatusFilter) {
+  if (status === 'Todos') return true
+  if (status === 'Finalizados') return match.resultStatus === 'confirmed'
+
+  return match.resultStatus !== 'confirmed'
+}
+
+function StatusTabs({
+  activeStatus,
+  onChange,
+  data,
+}: {
+  activeStatus: StatusFilter
+  onChange: (status: StatusFilter) => void
+  data: BolaoData
+}) {
+  const statuses: StatusFilter[] = ['Próximos', 'Finalizados', 'Todos']
+
+  return (
+    <div className="flex flex-wrap gap-2 rounded-lg border border-[var(--line)] bg-white/65 p-2">
+      <div className="mr-1 hidden items-center gap-1.5 px-2 text-sm font-bold text-[var(--sea-ink-soft)] sm:flex">
+        <ListFilter className="size-4" />
+        Status
+      </div>
+      {statuses.map((status) => (
+        <Button
+          key={status}
+          type="button"
+          variant={activeStatus === status ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => onChange(status)}
+          title={`Filtrar por ${status}`}
+        >
+          {status}
+          <span className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-black">
+            {
+              data.matches.filter((match) => matchMatchesStatus(match, status))
+                .length
+            }
+          </span>
+        </Button>
+      ))}
+    </div>
+  )
 }
 
 function PhaseTabs({
@@ -333,9 +440,13 @@ function AuthCard({ onDone }: { onDone: () => void }) {
 function MatchCard({
   match,
   canGuess,
+  players,
+  currentUserId,
 }: {
   match: MatchItem
   canGuess: boolean
+  players: Player[]
+  currentUserId: string | null
 }) {
   const router = useRouter()
   const saveGuessFn = useServerFn(saveGuess)
@@ -449,8 +560,228 @@ function MatchCard({
             {error}
           </p>
         ) : null}
+        {currentUserId ? (
+          <X1Section
+            match={match}
+            players={players}
+            currentUserId={currentUserId}
+            isLocked={isLocked}
+            hasResult={hasResult}
+          />
+        ) : null}
       </CardContent>
     </Card>
+  )
+}
+
+function X1Section({
+  match,
+  players,
+  currentUserId,
+  isLocked,
+  hasResult,
+}: {
+  match: MatchItem
+  players: Player[]
+  currentUserId: string
+  isLocked: boolean
+  hasResult: boolean
+}) {
+  const router = useRouter()
+  const createFn = useServerFn(createX1Challenge)
+  const respondFn = useServerFn(respondX1Challenge)
+  const cancelFn = useServerFn(cancelX1Challenge)
+  const [open, setOpen] = useState(false)
+  const [opponentId, setOpponentId] = useState('')
+  const [stake, setStake] = useState(1)
+  const [error, setError] = useState<string | null>(null)
+  const [isBusy, setIsBusy] = useState(false)
+
+  const x1 = match.x1
+  const opponents = players.filter((player) => player.id !== currentUserId)
+
+  async function run(action: () => Promise<unknown>) {
+    setError(null)
+    setIsBusy(true)
+    try {
+      await action()
+      setOpen(false)
+      setOpponentId('')
+      setStake(1)
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível.')
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 border-t border-[var(--line)] pt-3">
+      <div className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[var(--sea-ink-soft)]">
+        <Swords className="size-4" />
+        X1
+      </div>
+
+      {x1?.accepted ? (
+        <div className="rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold">
+          {x1.accepted.outcome === null ? (
+            <span>
+              Duelo com {x1.accepted.opponentName} · {x1.accepted.stake} pt(s)
+              em jogo
+            </span>
+          ) : x1.accepted.outcome === 'won' ? (
+            <span className="text-emerald-700">
+              Você venceu o X1 vs {x1.accepted.opponentName} (+
+              {x1.accepted.delta} pts)
+            </span>
+          ) : x1.accepted.outcome === 'lost' ? (
+            <span className="text-red-700">
+              Você perdeu o X1 vs {x1.accepted.opponentName} (
+              {x1.accepted.delta} pts)
+            </span>
+          ) : (
+            <span>X1 vs {x1.accepted.opponentName} empatou (push)</span>
+          )}
+        </div>
+      ) : x1?.incoming ? (
+        <div className="rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold">
+          <p className="mb-2">
+            {x1.incoming.challengerName} te desafiou · {x1.incoming.stake} pt(s)
+          </p>
+          {isLocked ? (
+            <p className="text-xs text-[var(--sea-ink-soft)]">
+              Jogo já começou.
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={isBusy}
+                onClick={() =>
+                  run(() =>
+                    respondFn({
+                      data: { challengeId: x1.incoming!.id, accept: true },
+                    }),
+                  )
+                }
+              >
+                <Check />
+                Aceitar
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={isBusy}
+                onClick={() =>
+                  run(() =>
+                    respondFn({
+                      data: { challengeId: x1.incoming!.id, accept: false },
+                    }),
+                  )
+                }
+              >
+                <X />
+                Recusar
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : x1?.outgoing ? (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold">
+          <span>
+            Aguardando {x1.outgoing.opponentName} · {x1.outgoing.stake} pt(s)
+          </span>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={isBusy}
+            onClick={() =>
+              run(() => cancelFn({ data: { challengeId: x1.outgoing!.id } }))
+            }
+          >
+            Cancelar
+          </Button>
+        </div>
+      ) : isLocked || hasResult ? (
+        <p className="text-xs font-medium text-[var(--sea-ink-soft)]">
+          Sem X1 neste jogo.
+        </p>
+      ) : opponents.length === 0 ? (
+        <p className="text-xs font-medium text-[var(--sea-ink-soft)]">
+          Nenhum oponente disponível ainda.
+        </p>
+      ) : open ? (
+        <div className="grid gap-2 rounded-md border border-[var(--line)] bg-white/70 p-3">
+          <select
+            value={opponentId}
+            onChange={(event) => setOpponentId(event.target.value)}
+            className="h-10 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-semibold"
+          >
+            <option value="">Escolha o oponente</option>
+            {opponents.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={stake}
+            onChange={(event) => setStake(Number(event.target.value))}
+            className="h-10 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-semibold"
+          >
+            <option value={1}>1 ponto</option>
+            <option value={2}>2 pontos</option>
+            <option value={3}>3 pontos</option>
+          </select>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={isBusy || !opponentId}
+              onClick={() =>
+                run(() =>
+                  createFn({
+                    data: { matchId: match.id, opponentId, stake },
+                  }),
+                )
+              }
+            >
+              <Swords />
+              Enviar desafio
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isBusy}
+              onClick={() => setOpen(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => setOpen(true)}
+        >
+          <Swords />
+          Desafiar X1
+        </Button>
+      )}
+
+      {error ? (
+        <p className="mt-2 rounded-md border border-red-500/30 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      ) : null}
+    </div>
   )
 }
 
@@ -522,10 +853,11 @@ function Scoreboard({ data }: { data: BolaoData }) {
           data.standings.map((player) => (
             <div
               key={player.id}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-[var(--line)] bg-white/70 p-3"
+              className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 rounded-md border border-[var(--line)] bg-white/70 p-3"
             >
+              <PositionDelta delta={player.delta} />
               <div className="flex size-9 items-center justify-center rounded-full bg-[var(--sand)] font-black">
-                {player.position}
+                <PositionBadge position={player.position} />
               </div>
               <div className="min-w-0">
                 <p className="truncate font-bold">{player.name}</p>
@@ -545,6 +877,37 @@ function Scoreboard({ data }: { data: BolaoData }) {
       </CardContent>
     </Card>
   )
+}
+
+function PositionBadge({ position }: { position: number }) {
+  if (position <= 3) {
+    const color =
+      position === 1
+        ? 'text-yellow-500'
+        : position === 2
+          ? 'text-gray-400'
+          : 'text-amber-700'
+
+    return <Medal className={`size-5 ${color}`} aria-label={`${position}º`} />
+  }
+
+  return <>{position}</>
+}
+
+function PositionDelta({ delta }: { delta: number }) {
+  if (delta > 0) {
+    return (
+      <ArrowUp className="size-4 text-emerald-600" aria-label="Subiu posições" />
+    )
+  }
+
+  if (delta < 0) {
+    return (
+      <ArrowDown className="size-4 text-red-600" aria-label="Caiu posições" />
+    )
+  }
+
+  return <span className="block w-4 text-center text-[var(--sea-ink-soft)]">·</span>
 }
 
 function RulesCard() {

@@ -302,75 +302,220 @@ async function refreshKnockoutTeams(matchRows: MatchRow[]) {
   }
 }
 
+type GuessRow = {
+  userId: string
+  matchId: string
+  homeScore: number
+  awayScore: number
+}
+
+type ChallengeRow = {
+  id: string
+  matchId: string
+  challengerId: string
+  opponentId: string
+  stake: number
+  status: string
+}
+
+type PlayerRow = { id: string; name: string | null; email: string }
+
+// Resolve um X1 aceito em partida finalizada. Retorna o vencedor (userId) ou
+// null em caso de push (empate de pontos e de placar exato).
+function resolveX1Winner(
+  challenge: ChallengeRow,
+  match: MatchRow,
+  guessByKey: Map<string, GuessRow>,
+) {
+  const challengerGuess = guessByKey.get(
+    `${challenge.challengerId}:${challenge.matchId}`,
+  )
+  const opponentGuess = guessByKey.get(
+    `${challenge.opponentId}:${challenge.matchId}`,
+  )
+  const challengerResult = challengerGuess
+    ? calculatePoints({
+        homeScore: challengerGuess.homeScore,
+        awayScore: challengerGuess.awayScore,
+        match,
+      })
+    : { points: 0, hitExact: false, hitOutcome: false }
+  const opponentResult = opponentGuess
+    ? calculatePoints({
+        homeScore: opponentGuess.homeScore,
+        awayScore: opponentGuess.awayScore,
+        match,
+      })
+    : { points: 0, hitExact: false, hitOutcome: false }
+
+  let winnerId: string | null
+  if (challengerResult.points !== opponentResult.points) {
+    winnerId =
+      challengerResult.points > opponentResult.points
+        ? challenge.challengerId
+        : challenge.opponentId
+  } else if (challengerResult.hitExact !== opponentResult.hitExact) {
+    winnerId = challengerResult.hitExact
+      ? challenge.challengerId
+      : challenge.opponentId
+  } else {
+    winnerId = null
+  }
+
+  const loserId = winnerId
+    ? winnerId === challenge.challengerId
+      ? challenge.opponentId
+      : challenge.challengerId
+    : null
+  const loserResult =
+    loserId === challenge.challengerId ? challengerResult : opponentResult
+
+  return { winnerId, loserId, loserPoints: loserResult.points }
+}
+
+// Ranking ao vivo: soma os pontos dos palpites e aplica os ajustes de X1
+// (vencedor ganha o stake; perdedor perde o stake e os pontos da partida).
+function computeStandings(
+  userRows: PlayerRow[],
+  guessRows: GuessRow[],
+  matchById: Map<string, MatchRow>,
+  challengeRows: ChallengeRow[],
+) {
+  const guessByKey = new Map<string, GuessRow>()
+  for (const guess of guessRows) {
+    guessByKey.set(`${guess.userId}:${guess.matchId}`, guess)
+  }
+
+  const tally = new Map(
+    userRows.map((player) => [
+      player.id,
+      {
+        id: player.id,
+        name: player.name || player.email,
+        guessesCount: 0,
+        points: 0,
+        exactHits: 0,
+        outcomeHits: 0,
+      },
+    ]),
+  )
+
+  for (const guess of guessRows) {
+    const entry = tally.get(guess.userId)
+    const match = matchById.get(guess.matchId)
+    if (!entry || !match) continue
+
+    entry.guessesCount += 1
+    const result = calculatePoints({
+      homeScore: guess.homeScore,
+      awayScore: guess.awayScore,
+      match,
+    })
+    entry.points += result.points
+    entry.exactHits += result.hitExact ? 1 : 0
+    entry.outcomeHits += result.hitOutcome ? 1 : 0
+  }
+
+  for (const challenge of challengeRows) {
+    if (challenge.status !== 'accepted') continue
+    const match = matchById.get(challenge.matchId)
+    if (!match || match.homeScore === null || match.awayScore === null) continue
+
+    const { winnerId, loserId, loserPoints } = resolveX1Winner(
+      challenge,
+      match,
+      guessByKey,
+    )
+    if (!winnerId || !loserId) continue
+
+    const winnerEntry = tally.get(winnerId)
+    const loserEntry = tally.get(loserId)
+    if (winnerEntry) winnerEntry.points += challenge.stake
+    if (loserEntry) loserEntry.points -= challenge.stake + loserPoints
+  }
+
+  return [...tally.values()]
+    .sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points
+      if (b.exactHits !== a.exactHits) return b.exactHits - a.exactHits
+      if (b.outcomeHits !== a.outcomeHits) return b.outcomeHits - a.outcomeHits
+      return a.name.localeCompare(b.name)
+    })
+    .map((player, index) => ({ ...player, position: index + 1 }))
+}
+
 export const getBolaoData = createServerFn({ method: 'GET' }).handler(
   async () => {
     await ensureSeedMatches()
 
-    const [{ asc }, { db }, { guesses, matches, user }] = await Promise.all([
-      import('drizzle-orm'),
-      import('#/db'),
-      import('#/db/schema'),
-    ])
+    const [{ asc }, { db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] =
+      await Promise.all([
+        import('drizzle-orm'),
+        import('#/db'),
+        import('#/db/schema'),
+      ])
     const sessionUser = await getSessionUser()
 
-    const [matchRows, guessRows, userRows] = await Promise.all([
-      db.select().from(matches).orderBy(asc(matches.startsAt)),
-      db
-        .select({
-          id: guesses.id,
-          userId: guesses.userId,
-          matchId: guesses.matchId,
-          homeScore: guesses.homeScore,
-          awayScore: guesses.awayScore,
-        })
-        .from(guesses),
-      db.select({ id: user.id, name: user.name, email: user.email }).from(user),
-    ])
+    const [matchRows, guessRows, userRows, snapshotRows, challengeRows] =
+      await Promise.all([
+        db.select().from(matches).orderBy(asc(matches.startsAt)),
+        db
+          .select({
+            id: guesses.id,
+            userId: guesses.userId,
+            matchId: guesses.matchId,
+            homeScore: guesses.homeScore,
+            awayScore: guesses.awayScore,
+          })
+          .from(guesses),
+        db
+          .select({ id: user.id, name: user.name, email: user.email })
+          .from(user),
+        db
+          .select({
+            userId: rankingSnapshots.userId,
+            position: rankingSnapshots.position,
+          })
+          .from(rankingSnapshots),
+        db
+          .select({
+            id: x1Challenges.id,
+            matchId: x1Challenges.matchId,
+            challengerId: x1Challenges.challengerId,
+            opponentId: x1Challenges.opponentId,
+            stake: x1Challenges.stake,
+            status: x1Challenges.status,
+          })
+          .from(x1Challenges),
+      ])
 
     await refreshKnockoutTeams(matchRows)
 
     const matchById = new Map(matchRows.map((match) => [match.id, match]))
-    const standings = userRows
-      .map((player) => {
-        const playerGuesses = guessRows.filter(
-          (guess) => guess.userId === player.id,
-        )
-        const score = playerGuesses.reduce(
-          (acc, guess) => {
-            const match = matchById.get(guess.matchId)
+    const guessByKey = new Map<string, GuessRow>()
+    for (const guess of guessRows) {
+      guessByKey.set(`${guess.userId}:${guess.matchId}`, guess)
+    }
+    const previousPositionByUser = new Map(
+      snapshotRows.map((snapshot) => [snapshot.userId, snapshot.position]),
+    )
+    const nameById = new Map(
+      userRows.map((player) => [player.id, player.name || player.email]),
+    )
 
-            if (!match) return acc
-
-            const result = calculatePoints({
-              homeScore: guess.homeScore,
-              awayScore: guess.awayScore,
-              match,
-            })
-
-            return {
-              points: acc.points + result.points,
-              exactHits: acc.exactHits + (result.hitExact ? 1 : 0),
-              outcomeHits: acc.outcomeHits + (result.hitOutcome ? 1 : 0),
-            }
-          },
-          { points: 0, exactHits: 0, outcomeHits: 0 },
-        )
-
-        return {
-          id: player.id,
-          name: player.name || player.email,
-          guessesCount: playerGuesses.length,
-          ...score,
-        }
-      })
-      .sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points
-        if (b.exactHits !== a.exactHits) return b.exactHits - a.exactHits
-        if (b.outcomeHits !== a.outcomeHits)
-          return b.outcomeHits - a.outcomeHits
-        return a.name.localeCompare(b.name)
-      })
-      .map((player, index) => ({ ...player, position: index + 1 }))
+    const standings = computeStandings(
+      userRows,
+      guessRows,
+      matchById,
+      challengeRows,
+    ).map((player) => {
+      const previousPosition = previousPositionByUser.get(player.id) ?? null
+      return {
+        ...player,
+        previousPosition,
+        delta: previousPosition === null ? 0 : previousPosition - player.position,
+      }
+    })
 
     const currentUserGuesses = new Map(
       guessRows
@@ -387,8 +532,23 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
             isAdmin: isAdminEmail(sessionUser.email),
           }
         : null,
+      players: userRows.map((player) => ({
+        id: player.id,
+        name: player.name || player.email,
+      })),
       matches: matchRows.map((match) => {
         const userGuess = currentUserGuesses.get(match.id)
+        const hasResult = match.homeScore !== null && match.awayScore !== null
+        const x1 = sessionUser
+          ? buildMatchX1View(
+              match,
+              sessionUser.id,
+              challengeRows,
+              nameById,
+              guessByKey,
+              hasResult,
+            )
+          : null
 
         return {
           ...match,
@@ -406,12 +566,92 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
                 }).points,
               }
             : null,
+          x1,
         }
       }),
       standings,
     }
   },
 )
+
+// Monta a visão de X1 do usuário atual para uma partida: convites recebidos,
+// enviados, o duelo aceito e o resultado quando a partida já foi finalizada.
+function buildMatchX1View(
+  match: MatchRow,
+  currentUserId: string,
+  challengeRows: ChallengeRow[],
+  nameById: Map<string, string>,
+  guessByKey: Map<string, GuessRow>,
+  hasResult: boolean,
+) {
+  const matchChallenges = challengeRows.filter(
+    (challenge) =>
+      challenge.matchId === match.id &&
+      (challenge.challengerId === currentUserId ||
+        challenge.opponentId === currentUserId),
+  )
+
+  const active = matchChallenges.find(
+    (challenge) =>
+      challenge.status === 'pending' || challenge.status === 'accepted',
+  )
+
+  let accepted: {
+    id: string
+    opponentName: string
+    stake: number
+    outcome: 'won' | 'lost' | 'push' | null
+    delta: number
+  } | null = null
+  let incoming: { id: string; challengerName: string; stake: number } | null =
+    null
+  let outgoing: { id: string; opponentName: string; stake: number } | null =
+    null
+
+  if (active) {
+    const isChallenger = active.challengerId === currentUserId
+    const otherId = isChallenger ? active.opponentId : active.challengerId
+    const otherName = nameById.get(otherId) ?? 'Jogador'
+
+    if (active.status === 'accepted') {
+      let outcome: 'won' | 'lost' | 'push' | null = null
+      let delta = 0
+      if (hasResult) {
+        const { winnerId, loserId, loserPoints } = resolveX1Winner(
+          active,
+          match,
+          guessByKey,
+        )
+        if (!winnerId) {
+          outcome = 'push'
+        } else if (winnerId === currentUserId) {
+          outcome = 'won'
+          delta = active.stake
+        } else if (loserId === currentUserId) {
+          outcome = 'lost'
+          delta = -(active.stake + loserPoints)
+        }
+      }
+      accepted = {
+        id: active.id,
+        opponentName: otherName,
+        stake: active.stake,
+        outcome,
+        delta,
+      }
+    } else if (isChallenger) {
+      outgoing = { id: active.id, opponentName: otherName, stake: active.stake }
+    } else {
+      incoming = {
+        id: active.id,
+        challengerName: otherName,
+        stake: active.stake,
+      }
+    }
+  }
+
+  return { accepted, incoming, outgoing }
+}
 
 export const getAdminData = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -538,6 +778,10 @@ export const saveMatchResult = createServerFn({ method: 'POST' })
       throw new Error('Jogo nao encontrado.')
     }
 
+    // Guarda as posicoes atuais antes de aplicar o resultado, para as setas
+    // de "subiu/caiu" refletirem o impacto deste jogo.
+    await snapshotStandings()
+
     const isClearing = data.homeScore === null && data.awayScore === null
 
     if (isClearing) {
@@ -626,6 +870,278 @@ export const saveMatchResult = createServerFn({ method: 'POST' })
         updatedAt: new Date(),
       })
       .where(eq(matches.id, data.matchId))
+
+    return { ok: true }
+  })
+
+// Calcula o ranking atual e persiste a posicao de cada usuario em
+// ranking_snapshots (uma linha por usuario, sobrescrita).
+async function snapshotStandings() {
+  const [{ db }, { guesses, matches, user, rankingSnapshots, x1Challenges }] =
+    await Promise.all([import('#/db'), import('#/db/schema')])
+
+  const [matchRows, guessRows, userRows, challengeRows] = await Promise.all([
+    db.select().from(matches),
+    db
+      .select({
+        id: guesses.id,
+        userId: guesses.userId,
+        matchId: guesses.matchId,
+        homeScore: guesses.homeScore,
+        awayScore: guesses.awayScore,
+      })
+      .from(guesses),
+    db.select({ id: user.id, name: user.name, email: user.email }).from(user),
+    db
+      .select({
+        id: x1Challenges.id,
+        matchId: x1Challenges.matchId,
+        challengerId: x1Challenges.challengerId,
+        opponentId: x1Challenges.opponentId,
+        stake: x1Challenges.stake,
+        status: x1Challenges.status,
+      })
+      .from(x1Challenges),
+  ])
+
+  const matchById = new Map(matchRows.map((match) => [match.id, match]))
+  const standings = computeStandings(
+    userRows,
+    guessRows,
+    matchById,
+    challengeRows,
+  )
+
+  for (const player of standings) {
+    await db
+      .insert(rankingSnapshots)
+      .values({
+        userId: player.id,
+        position: player.position,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: rankingSnapshots.userId,
+        set: { position: player.position, updatedAt: new Date() },
+      })
+  }
+}
+
+export const createX1Challenge = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      matchId: z.string().min(1),
+      opponentId: z.string().min(1),
+      stake: z.number().int().min(1).max(3),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await ensureSeedMatches()
+
+    const [{ eq, and, or }, { db }, { matches, user, x1Challenges }] =
+      await Promise.all([
+        import('drizzle-orm'),
+        import('#/db'),
+        import('#/db/schema'),
+      ])
+    const sessionUser = await getSessionUser()
+
+    if (!sessionUser) {
+      throw new Error('Voce precisa entrar para criar um X1.')
+    }
+
+    if (data.opponentId === sessionUser.id) {
+      throw new Error('Voce nao pode desafiar a si mesmo.')
+    }
+
+    const [matchRow] = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.id, data.matchId))
+      .limit(1)
+
+    if (!matchRow) {
+      throw new Error('Jogo nao encontrado.')
+    }
+
+    if (matchRow.startsAt.getTime() <= Date.now()) {
+      throw new Error('O X1 fica bloqueado depois do inicio do jogo.')
+    }
+
+    const [opponent] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, data.opponentId))
+      .limit(1)
+
+    if (!opponent) {
+      throw new Error('Oponente nao encontrado.')
+    }
+
+    const existing = await db
+      .select({
+        challengerId: x1Challenges.challengerId,
+        opponentId: x1Challenges.opponentId,
+      })
+      .from(x1Challenges)
+      .where(
+        and(
+          eq(x1Challenges.matchId, data.matchId),
+          or(
+            eq(x1Challenges.status, 'pending'),
+            eq(x1Challenges.status, 'accepted'),
+          ),
+        ),
+      )
+
+    const blocked = existing.some(
+      (challenge) =>
+        challenge.challengerId === sessionUser.id ||
+        challenge.opponentId === sessionUser.id ||
+        challenge.challengerId === data.opponentId ||
+        challenge.opponentId === data.opponentId,
+    )
+
+    if (blocked) {
+      throw new Error('Ja existe um X1 ativo para um dos jogadores nesse jogo.')
+    }
+
+    await db.insert(x1Challenges).values({
+      id: crypto.randomUUID(),
+      matchId: data.matchId,
+      challengerId: sessionUser.id,
+      opponentId: data.opponentId,
+      stake: data.stake,
+      status: 'pending',
+      updatedAt: new Date(),
+    })
+
+    return { ok: true }
+  })
+
+export const respondX1Challenge = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      challengeId: z.string().min(1),
+      accept: z.boolean(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const [{ eq, and }, { db }, { matches, x1Challenges }] = await Promise.all([
+      import('drizzle-orm'),
+      import('#/db'),
+      import('#/db/schema'),
+    ])
+    const sessionUser = await getSessionUser()
+
+    if (!sessionUser) {
+      throw new Error('Voce precisa entrar para responder um X1.')
+    }
+
+    const [challenge] = await db
+      .select()
+      .from(x1Challenges)
+      .where(eq(x1Challenges.id, data.challengeId))
+      .limit(1)
+
+    if (!challenge) {
+      throw new Error('Desafio nao encontrado.')
+    }
+
+    if (challenge.opponentId !== sessionUser.id) {
+      throw new Error('Voce nao foi desafiado nesse X1.')
+    }
+
+    if (challenge.status !== 'pending') {
+      throw new Error('Esse desafio ja foi respondido.')
+    }
+
+    const [matchRow] = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.id, challenge.matchId))
+      .limit(1)
+
+    if (matchRow && matchRow.startsAt.getTime() <= Date.now()) {
+      throw new Error('O X1 fica bloqueado depois do inicio do jogo.')
+    }
+
+    if (data.accept) {
+      const existing = await db
+        .select({
+          id: x1Challenges.id,
+          challengerId: x1Challenges.challengerId,
+          opponentId: x1Challenges.opponentId,
+        })
+        .from(x1Challenges)
+        .where(
+          and(
+            eq(x1Challenges.matchId, challenge.matchId),
+            eq(x1Challenges.status, 'accepted'),
+          ),
+        )
+
+      const blocked = existing.some(
+        (other) =>
+          other.id !== challenge.id &&
+          (other.challengerId === sessionUser.id ||
+            other.opponentId === sessionUser.id ||
+            other.challengerId === challenge.challengerId ||
+            other.opponentId === challenge.challengerId),
+      )
+
+      if (blocked) {
+        throw new Error('Ja existe um X1 aceito para um dos jogadores.')
+      }
+    }
+
+    await db
+      .update(x1Challenges)
+      .set({
+        status: data.accept ? 'accepted' : 'declined',
+        updatedAt: new Date(),
+      })
+      .where(eq(x1Challenges.id, challenge.id))
+
+    return { ok: true }
+  })
+
+export const cancelX1Challenge = createServerFn({ method: 'POST' })
+  .validator(z.object({ challengeId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const [{ eq }, { db }, { x1Challenges }] = await Promise.all([
+      import('drizzle-orm'),
+      import('#/db'),
+      import('#/db/schema'),
+    ])
+    const sessionUser = await getSessionUser()
+
+    if (!sessionUser) {
+      throw new Error('Voce precisa entrar para cancelar um X1.')
+    }
+
+    const [challenge] = await db
+      .select()
+      .from(x1Challenges)
+      .where(eq(x1Challenges.id, data.challengeId))
+      .limit(1)
+
+    if (!challenge) {
+      throw new Error('Desafio nao encontrado.')
+    }
+
+    if (challenge.challengerId !== sessionUser.id) {
+      throw new Error('Voce nao criou esse X1.')
+    }
+
+    if (challenge.status !== 'pending') {
+      throw new Error('So da para cancelar um X1 pendente.')
+    }
+
+    await db
+      .update(x1Challenges)
+      .set({ status: 'cancelled', updatedAt: new Date() })
+      .where(eq(x1Challenges.id, challenge.id))
 
     return { ok: true }
   })
