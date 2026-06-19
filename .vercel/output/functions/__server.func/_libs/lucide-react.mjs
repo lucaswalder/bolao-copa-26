@@ -115,12 +115,38 @@ var createLucideIcon = (iconName, iconNode) => {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ArrowDown = createLucideIcon("arrow-down", [["path", {
+	d: "M12 5v14",
+	key: "s699le"
+}], ["path", {
+	d: "m19 12-7 7-7-7",
+	key: "1idqje"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var ArrowLeft = createLucideIcon("arrow-left", [["path", {
 	d: "m12 19-7-7 7-7",
 	key: "1l729n"
 }], ["path", {
 	d: "M19 12H5",
 	key: "x3x0zl"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ArrowUp = createLucideIcon("arrow-up", [["path", {
+	d: "m5 12 7-7 7 7",
+	key: "hav0vg"
+}], ["path", {
+	d: "M12 19V5",
+	key: "x0mq9r"
 }]]);
 /**
 * @license lucide-react v0.577.0 - ISC
@@ -174,6 +200,16 @@ var CalendarDays = createLucideIcon("calendar-days", [
 		key: "kzsmim"
 	}]
 ]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Check = createLucideIcon("check", [["path", {
+	d: "M20 6 9 17l-5-5",
+	key: "1gmf2c"
+}]]);
 /**
 * @license lucide-react v0.577.0 - ISC
 *
@@ -343,6 +379,64 @@ var ShieldCheck = createLucideIcon("shield-check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Swords = createLucideIcon("swords", [
+	["polyline", {
+		points: "14.5 17.5 3 6 3 3 6 3 17.5 14.5",
+		key: "1hfsw2"
+	}],
+	["line", {
+		x1: "13",
+		x2: "19",
+		y1: "19",
+		y2: "13",
+		key: "1vrmhu"
+	}],
+	["line", {
+		x1: "16",
+		x2: "20",
+		y1: "16",
+		y2: "20",
+		key: "1bron3"
+	}],
+	["line", {
+		x1: "19",
+		x2: "21",
+		y1: "21",
+		y2: "19",
+		key: "13pww6"
+	}],
+	["polyline", {
+		points: "14.5 6.5 18 3 21 3 21 6 17.5 9.5",
+		key: "hbey2j"
+	}],
+	["line", {
+		x1: "5",
+		x2: "9",
+		y1: "14",
+		y2: "18",
+		key: "1hf58s"
+	}],
+	["line", {
+		x1: "7",
+		x2: "4",
+		y1: "17",
+		y2: "20",
+		key: "pidxm4"
+	}],
+	["line", {
+		x1: "3",
+		x2: "5",
+		y1: "19",
+		y2: "21",
+		key: "1pehsh"
+	}]
+]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Trophy = createLucideIcon("trophy", [
 	["path", {
 		d: "M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978",
@@ -401,5 +495,18 @@ var UserPlus = createLucideIcon("user-plus", [
 		key: "1shjgl"
 	}]
 ]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var X = createLucideIcon("x", [["path", {
+	d: "M18 6 6 18",
+	key: "1bl5f8"
+}], ["path", {
+	d: "m6 6 12 12",
+	key: "d8bk6v"
+}]]);
 //#endregion
-export { RotateCcw as a, Lock as c, CircleCheck as d, CalendarDays as f, Save as i, ListFilter as l, Trophy as n, Medal as o, ArrowLeft as p, ShieldCheck as r, LogOut as s, UserPlus as t, Flag as u };
+export { ArrowLeft as _, ShieldCheck as a, Medal as c, ListFilter as d, Flag as f, ArrowUp as g, CalendarDays as h, Swords as i, LogOut as l, Check as m, UserPlus as n, Save as o, CircleCheck as p, Trophy as r, RotateCcw as s, X as t, Lock as u, ArrowDown as v };

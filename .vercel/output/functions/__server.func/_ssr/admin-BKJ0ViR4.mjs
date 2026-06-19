@@ -1,9 +1,9 @@
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import "./bolao-CzQ0CbwH.mjs";
+import "./bolao-Dg65kDIJ.mjs";
 import { a as CardHeader, i as CardDescription, n as Card, o as CardTitle, r as CardContent, t as Badge } from "./card-BCLLgRQe.mjs";
-import { p as ArrowLeft, r as ShieldCheck } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-CXbf2021.js
+import { _ as ArrowLeft, a as ShieldCheck } from "../_libs/lucide-react.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-BKJ0ViR4.js
 var import_jsx_runtime = require_jsx_runtime();
 function AdminError({ error }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {

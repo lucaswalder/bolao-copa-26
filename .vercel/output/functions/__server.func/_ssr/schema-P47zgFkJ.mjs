@@ -1,7 +1,7 @@
 import { r as __exportAll$1 } from "../_runtime.mjs";
 import { C as pgTable, D as boolean, E as integer, S as uniqueIndex, T as text, w as timestamp, x as index } from "../_libs/drizzle-orm.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/schema-D1-fLAO-.js
-var schema_D1_fLAO__exports = /* @__PURE__ */ __exportAll$1({
+//#region node_modules/.nitro/vite/services/ssr/assets/schema-P47zgFkJ.js
+var schema_P47zgFkJ_exports = /* @__PURE__ */ __exportAll$1({
 	n: () => __commonJSMin,
 	r: () => __exportAll,
 	t: () => schema_exports
@@ -21,9 +21,11 @@ var schema_exports = /* @__PURE__ */ __exportAll({
 	account: () => account,
 	guesses: () => guesses,
 	matches: () => matches,
+	rankingSnapshots: () => rankingSnapshots,
 	session: () => session,
 	user: () => user,
-	verification: () => verification
+	verification: () => verification,
+	x1Challenges: () => x1Challenges
 });
 var user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -98,5 +100,20 @@ var guesses = pgTable("guesses", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at").notNull().defaultNow()
 }, (table) => [uniqueIndex("guess_user_match_idx").on(table.userId, table.matchId)]);
+var rankingSnapshots = pgTable("ranking_snapshots", {
+	userId: text("user_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+	position: integer("position").notNull(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+var x1Challenges = pgTable("x1_challenges", {
+	id: text("id").primaryKey(),
+	matchId: text("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
+	challengerId: text("challenger_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	opponentId: text("opponent_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+	stake: integer("stake").notNull(),
+	status: text("status").notNull().default("pending"),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow()
+}, (table) => [index("x1_match_idx").on(table.matchId)]);
 //#endregion
-export { schema_exports as i, __exportAll as n, schema_D1_fLAO__exports as r, __commonJSMin as t };
+export { schema_exports as i, __exportAll as n, schema_P47zgFkJ_exports as r, __commonJSMin as t };

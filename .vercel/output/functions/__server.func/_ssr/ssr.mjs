@@ -1,5 +1,5 @@
 import { r as __exportAll } from "../_runtime.mjs";
-import { n as __exportAll$1 } from "./schema-D1-fLAO-.mjs";
+import { n as __exportAll$1 } from "./schema-P47zgFkJ.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { n as defineHandlerCallback, o as RouterProvider, r as renderRouterToString, t as renderRouterToStream } from "../_libs/@tanstack/react-router+[...].mjs";
 import { PassThrough, Readable } from "node:stream";
@@ -4476,7 +4476,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-ClBct_YH.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-ShnlGLis.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -4496,21 +4496,33 @@ async function getStartManifest(matchedRoutes) {
 	};
 }
 var manifest = {
+	"4deff4110ee7efbb309be401d3db70001ec839a67dcd14d0d5942c9ca76dc871": {
+		functionName: "respondX1Challenge_createServerFn_handler",
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
+	},
 	"61b583fb06daa194ef7d263a7eea03a7e5bf9c77bfeb777a9aa878d891fccc3a": {
 		functionName: "getAdminData_createServerFn_handler",
-		importer: () => import("./bolao-DGOlqqgl.mjs")
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
 	},
 	"770395cb0a54d163507d72e39c35d4e6be55257ab05c3668cac486e9efe5924f": {
 		functionName: "saveGuess_createServerFn_handler",
-		importer: () => import("./bolao-DGOlqqgl.mjs")
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
+	},
+	"8b61371e396161395766012da1e15f18fdb5405546f019dd496902f635393c6f": {
+		functionName: "createX1Challenge_createServerFn_handler",
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
 	},
 	"9c0ae71b2df8f6a272c3b86699a0f3cc1c9037a7549e51873626dc41cdbc085c": {
 		functionName: "getBolaoData_createServerFn_handler",
-		importer: () => import("./bolao-DGOlqqgl.mjs")
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
+	},
+	"d35208f0ba90f8bb98608fde71f64bd72848f6d260417b0c68a0424a4ec520b9": {
+		functionName: "cancelX1Challenge_createServerFn_handler",
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
 	},
 	"d6fe564b0e75085bdbf6bb714c257296042a8409381c1bfe8b3128b4c5d3b81a": {
 		functionName: "saveMatchResult_createServerFn_handler",
-		importer: () => import("./bolao-DGOlqqgl.mjs")
+		importer: () => import("./bolao-Bw5NaF6T.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -6954,7 +6966,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-Btf96fmQ.mjs"),
+		import("./router-Ci7Q5wRn.mjs"),
 		import("./start-BHSdyiMs.mjs"),
 		import("./empty-plugin-adapters-D7NB1rCe.mjs")
 	]);

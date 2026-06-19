@@ -1,13 +1,13 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link, f as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { r as saveGuess } from "./bolao-CzQ0CbwH.mjs";
+import { a as respondX1Challenge, n as createX1Challenge, o as saveGuess, t as cancelX1Challenge } from "./bolao-Dg65kDIJ.mjs";
 import { a as CardHeader, i as CardDescription, n as Card, o as CardTitle, r as CardContent, t as Badge } from "./card-BCLLgRQe.mjs";
-import { c as Lock, f as CalendarDays, i as Save, l as ListFilter, n as Trophy, o as Medal, r as ShieldCheck, s as LogOut, t as UserPlus, u as Flag } from "../_libs/lucide-react.mjs";
+import { a as ShieldCheck, c as Medal, d as ListFilter, f as Flag, g as ArrowUp, h as CalendarDays, i as Swords, l as LogOut, m as Check, n as UserPlus, o as Save, r as Trophy, t as X, u as Lock, v as ArrowDown } from "../_libs/lucide-react.mjs";
 import { i as useServerFn, n as Input, r as Label, t as Button } from "./label-DQKaOuO8.mjs";
-import { a as isSafeUrlScheme, d as toKebabCase, i as defu, o as getBaseURL, r as createFetch, u as capitalizeFirstLetter } from "./auth-CX45ZQrs.mjs";
-import { t as Route } from "./routes-sdcK3_iB.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BtoY5oCF.js
+import { a as isSafeUrlScheme, d as toKebabCase, i as defu, o as getBaseURL, r as createFetch, u as capitalizeFirstLetter } from "./auth-3txykCZS.mjs";
+import { t as Route } from "./routes-DKhdG8dD.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-HDsXlGas.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var PROTO_POLLUTION_PATTERNS = {
@@ -788,94 +788,134 @@ function Home() {
 	const data = Route.useLoaderData();
 	const router = useRouter();
 	const [phase, setPhase] = (0, import_react.useState)("Todos");
-	const filteredMatches = data.matches.filter((match) => matchMatchesPhase(match, phase));
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {
+	const [status, setStatus] = (0, import_react.useState)("Próximos");
+	const [showPlacar, setShowPlacar] = (0, import_react.useState)(false);
+	const filteredMatches = data.matches.filter((match) => matchMatchesPhase(match, phase)).filter((match) => matchMatchesStatus(match, status));
+	if (status === "Finalizados") filteredMatches.reverse();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "min-h-screen px-4 py-6 text-[var(--sea-ink)] sm:px-6 lg:px-8",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mx-auto flex w-full max-w-7xl flex-col gap-6",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", {
-				className: "island-shell overflow-hidden rounded-lg",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "pitch-band grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mb-3 flex flex-wrap items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
-								variant: "green",
-								className: "gap-1",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flag, { className: "size-3.5" }), "Copa 2026"]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-								variant: "canary",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mx-auto flex w-full max-w-7xl flex-col gap-6",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", {
+					className: "island-shell overflow-hidden rounded-lg",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pitch-band grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mb-3 flex flex-wrap items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
+									variant: "green",
+									className: "gap-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flag, { className: "size-3.5" }), "Copa 2026"]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+									variant: "canary",
+									children: "Bolão CFFDP"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "display-title text-4xl font-bold leading-tight text-[var(--sea-ink)] sm:text-5xl",
 								children: "Bolão CFFDP"
-							})]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-							className: "display-title text-4xl font-bold leading-tight text-[var(--sea-ink)] sm:text-5xl",
-							children: "Bolão CFFDP"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "mt-3 max-w-2xl text-base font-medium text-[var(--sea-ink-soft)]",
-							children: "Palpites entre amigos, ranking ao vivo e aquela pressão boa de acompanhar a Copa inteira até a final."
-						})
-					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SessionBox, {
-						user: data.user,
-						onDone: () => router.invalidate()
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-3 max-w-2xl text-base font-medium text-[var(--sea-ink-soft)]",
+								children: "Palpites entre amigos, ranking ao vivo e aquela pressão boa de acompanhar a Copa inteira até a final."
+							})
+						] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SessionBox, {
+							user: data.user,
+							onDone: () => router.invalidate()
+						})]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+					className: "grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col gap-4",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-wrap items-end justify-between gap-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "island-kicker",
+										children: "Palpites"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+										className: "text-2xl font-bold",
+										children: "Tabela da Copa"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: "mt-1 text-sm font-semibold text-[var(--sea-ink-soft)]",
+										children: [
+											filteredMatches.length,
+											" de ",
+											data.matches.length,
+											" jogos"
+										]
+									})
+								] }), !data.user ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
+									variant: "secondary",
+									className: "gap-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-3.5" }), "Entre para salvar"]
+								}) : data.user.isAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+									to: "/admin",
+									className: "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "size-4" }), "Admin"]
+								}) : null]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PhaseTabs, {
+								activePhase: phase,
+								onChange: setPhase,
+								data
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusTabs, {
+								activeStatus: status,
+								onChange: setStatus,
+								data
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "grid gap-4",
+								children: filteredMatches.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "rounded-lg border border-[var(--line)] bg-white/65 p-6 text-center text-sm font-semibold text-[var(--sea-ink-soft)]",
+									children: "Nenhum jogo neste filtro."
+								}) : filteredMatches.map((match) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MatchCard, {
+									match,
+									canGuess: Boolean(data.user),
+									players: data.players,
+									currentUserId: data.user?.id ?? null
+								}, match.id))
+							})
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
+						className: "flex flex-col gap-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scoreboard, { data }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RulesCard, {})]
 					})]
-				})
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-				className: "grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex flex-col gap-4",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-wrap items-end justify-between gap-3",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "island-kicker",
-									children: "Palpites"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-									className: "text-2xl font-bold",
-									children: "Tabela da Copa"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-									className: "mt-1 text-sm font-semibold text-[var(--sea-ink-soft)]",
-									children: [
-										filteredMatches.length,
-										" de ",
-										data.matches.length,
-										" jogos"
-									]
-								})
-							] }), !data.user ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
-								variant: "secondary",
-								className: "gap-1",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-3.5" }), "Entre para salvar"]
-							}) : data.user.isAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
-								to: "/admin",
-								className: "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "size-4" }), "Admin"]
-							}) : null]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PhaseTabs, {
-							activePhase: phase,
-							onChange: setPhase,
-							data
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "grid gap-4",
-							children: filteredMatches.map((match) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MatchCard, {
-								match,
-								canGuess: Boolean(data.user)
-							}, match.id))
-						})
-					]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
-					className: "flex flex-col gap-4",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scoreboard, { data }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RulesCard, {})]
 				})]
-			})]
-		})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => setShowPlacar(true),
+				className: "fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--sea-ink)] px-5 py-3 text-sm font-bold text-white shadow-lg lg:hidden",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trophy, { className: "size-4" }), "Ver placar"]
+			}),
+			showPlacar ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 lg:hidden",
+				onClick: () => setShowPlacar(false),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "max-h-[85vh] w-full max-w-lg overflow-y-auto",
+					onClick: (event) => event.stopPropagation(),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mb-2 flex justify-end",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							type: "button",
+							variant: "secondary",
+							size: "icon",
+							"aria-label": "Fechar placar",
+							onClick: () => setShowPlacar(false),
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, {})
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scoreboard, { data })]
+				})
+			}) : null
+		]
 	});
 }
 function matchMatchesPhase(match, phase) {
@@ -889,6 +929,34 @@ function matchMatchesPhase(match, phase) {
 		"Disputa de 3º lugar",
 		"Final"
 	].includes(match.round);
+}
+function matchMatchesStatus(match, status) {
+	if (status === "Todos") return true;
+	if (status === "Finalizados") return match.resultStatus === "confirmed";
+	return match.resultStatus !== "confirmed";
+}
+function StatusTabs({ activeStatus, onChange, data }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-wrap gap-2 rounded-lg border border-[var(--line)] bg-white/65 p-2",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "mr-1 hidden items-center gap-1.5 px-2 text-sm font-bold text-[var(--sea-ink-soft)] sm:flex",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ListFilter, { className: "size-4" }), "Status"]
+		}), [
+			"Próximos",
+			"Finalizados",
+			"Todos"
+		].map((status) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+			type: "button",
+			variant: activeStatus === status ? "default" : "ghost",
+			size: "sm",
+			onClick: () => onChange(status),
+			title: `Filtrar por ${status}`,
+			children: [status, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-black",
+				children: data.matches.filter((match) => matchMatchesStatus(match, status)).length
+			})]
+		}, status))]
+	});
 }
 function PhaseTabs({ activePhase, onChange, data }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1066,7 +1134,7 @@ function AuthCard({ onDone }) {
 		})]
 	});
 }
-function MatchCard({ match, canGuess }) {
+function MatchCard({ match, canGuess, players, currentUserId }) {
 	const router = useRouter();
 	const saveGuessFn = useServerFn(saveGuess);
 	const [error, setError] = (0, import_react.useState)(null);
@@ -1198,8 +1266,208 @@ function MatchCard({ match, canGuess }) {
 			error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "mt-3 rounded-md border border-red-500/30 bg-red-50 px-3 py-2 text-sm font-medium text-red-700",
 				children: error
+			}) : null,
+			currentUserId ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X1Section, {
+				match,
+				players,
+				currentUserId,
+				isLocked,
+				hasResult
 			}) : null
 		] })]
+	});
+}
+function X1Section({ match, players, currentUserId, isLocked, hasResult }) {
+	const router = useRouter();
+	const createFn = useServerFn(createX1Challenge);
+	const respondFn = useServerFn(respondX1Challenge);
+	const cancelFn = useServerFn(cancelX1Challenge);
+	const [open, setOpen] = (0, import_react.useState)(false);
+	const [opponentId, setOpponentId] = (0, import_react.useState)("");
+	const [stake, setStake] = (0, import_react.useState)(1);
+	const [error, setError] = (0, import_react.useState)(null);
+	const [isBusy, setIsBusy] = (0, import_react.useState)(false);
+	const x1 = match.x1;
+	const opponents = players.filter((player) => player.id !== currentUserId);
+	async function run(action) {
+		setError(null);
+		setIsBusy(true);
+		try {
+			await action();
+			setOpen(false);
+			setOpponentId("");
+			setStake(1);
+			await router.invalidate();
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Não foi possível.");
+		} finally {
+			setIsBusy(false);
+		}
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mt-4 border-t border-[var(--line)] pt-3",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mb-2 flex items-center gap-1.5 text-sm font-bold text-[var(--sea-ink-soft)]",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Swords, { className: "size-4" }), "X1"]
+			}),
+			x1?.accepted ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold",
+				children: x1.accepted.outcome === null ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"Duelo com ",
+					x1.accepted.opponentName,
+					" · ",
+					x1.accepted.stake,
+					" pt(s) em jogo"
+				] }) : x1.accepted.outcome === "won" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "text-emerald-700",
+					children: [
+						"Você venceu o X1 vs ",
+						x1.accepted.opponentName,
+						" (+",
+						x1.accepted.delta,
+						" pts)"
+					]
+				}) : x1.accepted.outcome === "lost" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "text-red-700",
+					children: [
+						"Você perdeu o X1 vs ",
+						x1.accepted.opponentName,
+						" (",
+						x1.accepted.delta,
+						" pts)"
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"X1 vs ",
+					x1.accepted.opponentName,
+					" empatou (push)"
+				] })
+			}) : x1?.incoming ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "mb-2",
+					children: [
+						x1.incoming.challengerName,
+						" te desafiou · ",
+						x1.incoming.stake,
+						" pt(s)"
+					]
+				}), isLocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs text-[var(--sea-ink-soft)]",
+					children: "Jogo já começou."
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						type: "button",
+						size: "sm",
+						disabled: isBusy,
+						onClick: () => run(() => respondFn({ data: {
+							challengeId: x1.incoming.id,
+							accept: true
+						} })),
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {}), "Aceitar"]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						type: "button",
+						variant: "secondary",
+						size: "sm",
+						disabled: isBusy,
+						onClick: () => run(() => respondFn({ data: {
+							challengeId: x1.incoming.id,
+							accept: false
+						} })),
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, {}), "Recusar"]
+					})]
+				})]
+			}) : x1?.outgoing ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between gap-2 rounded-md border border-[var(--line)] bg-white/70 p-3 text-sm font-semibold",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"Aguardando ",
+					x1.outgoing.opponentName,
+					" · ",
+					x1.outgoing.stake,
+					" pt(s)"
+				] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					type: "button",
+					variant: "secondary",
+					size: "sm",
+					disabled: isBusy,
+					onClick: () => run(() => cancelFn({ data: { challengeId: x1.outgoing.id } })),
+					children: "Cancelar"
+				})]
+			}) : isLocked || hasResult ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-xs font-medium text-[var(--sea-ink-soft)]",
+				children: "Sem X1 neste jogo."
+			}) : opponents.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-xs font-medium text-[var(--sea-ink-soft)]",
+				children: "Nenhum oponente disponível ainda."
+			}) : open ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "grid gap-2 rounded-md border border-[var(--line)] bg-white/70 p-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+						value: opponentId,
+						onChange: (event) => setOpponentId(event.target.value),
+						className: "h-10 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-semibold",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "",
+							children: "Escolha o oponente"
+						}), opponents.map((player) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: player.id,
+							children: player.name
+						}, player.id))]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+						value: stake,
+						onChange: (event) => setStake(Number(event.target.value)),
+						className: "h-10 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-semibold",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+								value: 1,
+								children: "1 ponto"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+								value: 2,
+								children: "2 pontos"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+								value: 3,
+								children: "3 pontos"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+							type: "button",
+							size: "sm",
+							disabled: isBusy || !opponentId,
+							onClick: () => run(() => createFn({ data: {
+								matchId: match.id,
+								opponentId,
+								stake
+							} })),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Swords, {}), "Enviar desafio"]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							type: "button",
+							variant: "ghost",
+							size: "sm",
+							disabled: isBusy,
+							onClick: () => setOpen(false),
+							children: "Cancelar"
+						})]
+					})
+				]
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				type: "button",
+				variant: "secondary",
+				size: "sm",
+				onClick: () => setOpen(true),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Swords, {}), "Desafiar X1"]
+			}),
+			error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-2 rounded-md border border-red-500/30 bg-red-50 px-3 py-2 text-sm font-medium text-red-700",
+				children: error
+			}) : null
+		]
 	});
 }
 function ScoreInput({ label, name, defaultValue, disabled }) {
@@ -1243,11 +1511,12 @@ function Scoreboard({ data }) {
 			className: "text-sm text-[var(--sea-ink-soft)]",
 			children: "O ranking aparece quando a primeira conta for criada."
 		}) : data.standings.map((player) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-[var(--line)] bg-white/70 p-3",
+			className: "grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 rounded-md border border-[var(--line)] bg-white/70 p-3",
 			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PositionDelta, { delta: player.delta }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex size-9 items-center justify-center rounded-full bg-[var(--sand)] font-black",
-					children: player.position
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PositionBadge, { position: player.position })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "min-w-0",
@@ -1277,6 +1546,27 @@ function Scoreboard({ data }) {
 			]
 		}, player.id))
 	})] });
+}
+function PositionBadge({ position }) {
+	if (position <= 3) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Medal, {
+		className: `size-5 ${position === 1 ? "text-yellow-500" : position === 2 ? "text-gray-400" : "text-amber-700"}`,
+		"aria-label": `${position}º`
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: position });
+}
+function PositionDelta({ delta }) {
+	if (delta > 0) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowUp, {
+		className: "size-4 text-emerald-600",
+		"aria-label": "Subiu posições"
+	});
+	if (delta < 0) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowDown, {
+		className: "size-4 text-red-600",
+		"aria-label": "Caiu posições"
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+		className: "block w-4 text-center text-[var(--sea-ink-soft)]",
+		children: "·"
+	});
 }
 function RulesCard() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {

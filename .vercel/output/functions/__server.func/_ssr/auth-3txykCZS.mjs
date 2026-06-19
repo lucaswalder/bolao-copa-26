@@ -1,7 +1,7 @@
 import { O as sql, _ as lte, a as asc, b as or, c as eq, d as ilike, f as inArray, g as lt, h as like, i as count, l as gt, m as isNull$1, o as desc, p as isNotNull, s as and, u as gte, v as ne, y as notInArray } from "../_libs/drizzle-orm.mjs";
-import { i as schema_exports, n as __exportAll, t as __commonJSMin } from "./schema-D1-fLAO-.mjs";
+import { i as schema_exports, n as __exportAll, t as __commonJSMin } from "./schema-P47zgFkJ.mjs";
 import { _ as string, a as _enum, c as boolean$1, d as ipv6, f as looseObject, g as record, h as optional, i as ZodOptional, l as email, m as object, n as string$1, o as any, p as number, r as ZodObject, s as array, t as boolean, u as ipv4 } from "../_libs/zod.mjs";
-import { t as db } from "./db-C-4J7LGe.mjs";
+import { t as db } from "./db-CVfCauA_.mjs";
 import { randomBytes, scrypt } from "node:crypto";
 import fs from "node:fs";
 import fsPromises from "node:fs/promises";
@@ -1989,7 +1989,7 @@ var ENV = Object.freeze({
 	}
 });
 //#endregion
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-CX45ZQrs.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-3txykCZS.js
 /**
 * @internal
 */
@@ -22960,7 +22960,7 @@ var createKyselyAdapter = async (config) => {
 	if ("getConnection" in db) dialect = new MysqlDialect(db);
 	if ("connect" in db) dialect = new PostgresDialect({ pool: db });
 	if ("fileControl" in db) {
-		const { BunSqliteDialect } = await import("./bun-sqlite-dialect-DApWON3g-DY_KdgVZ.mjs");
+		const { BunSqliteDialect } = await import("./bun-sqlite-dialect-DApWON3g-DF1NaaTi.mjs");
 		dialect = new BunSqliteDialect({ database: db });
 	}
 	if ("createSession" in db) {
@@ -22976,12 +22976,12 @@ var createKyselyAdapter = async (config) => {
 			if (error !== null && typeof error === "object" && "code" in error && error.code !== "ERR_UNKNOWN_BUILTIN_MODULE") throw error;
 		}
 		if (DatabaseSync && db instanceof DatabaseSync) {
-			const { NodeSqliteDialect } = await import("./node-sqlite-dialect-CGu8cGRd.mjs");
+			const { NodeSqliteDialect } = await import("./node-sqlite-dialect-DOiP4EB2.mjs");
 			dialect = new NodeSqliteDialect({ database: db });
 		}
 	}
 	if ("batch" in db && "exec" in db && "prepare" in db) {
-		const { D1SqliteDialect } = await import("./d1-sqlite-dialect-BLC8LXE6-ENZA0R7F.mjs");
+		const { D1SqliteDialect } = await import("./d1-sqlite-dialect-BLC8LXE6-BN3Oe1xz.mjs");
 		dialect = new D1SqliteDialect({ database: db });
 	}
 	return {
@@ -40555,7 +40555,7 @@ async function getBaseAdapter(options, handleDirectDatabase) {
 			acc[key] = [];
 			return acc;
 		}, {});
-		const { memoryAdapter } = await import("./dist-BUIf7dSe.mjs");
+		const { memoryAdapter } = await import("./dist-DGNUlzHh.mjs");
 		adapter = memoryAdapter(memoryDB)(options);
 	} else if (typeof options.database === "function") adapter = options.database(options);
 	else adapter = await handleDirectDatabase(options);
@@ -40569,10 +40569,10 @@ async function getBaseAdapter(options, handleDirectDatabase) {
 }
 async function getAdapter(options) {
 	return getBaseAdapter(options, async (opts) => {
-		const { createKyselyAdapter } = await import("./kysely-adapter-753crRBm.mjs");
+		const { createKyselyAdapter } = await import("./kysely-adapter-BOQcdHa0.mjs");
 		const { kysely, databaseType, transaction } = await createKyselyAdapter(opts);
 		if (!kysely) throw new BetterAuthError("Failed to initialize database adapter");
-		const { kyselyAdapter } = await import("./kysely-adapter-753crRBm.mjs");
+		const { kyselyAdapter } = await import("./kysely-adapter-BOQcdHa0.mjs");
 		return kyselyAdapter(kysely, {
 			type: databaseType || "sqlite",
 			debugLogs: opts.database && "debugLogs" in opts.database ? opts.database.debugLogs : false,
