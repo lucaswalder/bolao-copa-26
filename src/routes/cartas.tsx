@@ -144,8 +144,8 @@ function CartasPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Gaste pontos do ranking para comprar uma carta aleatória da
-              raridade escolhida.
+              Gaste seus <strong>pontos X1</strong> para comprar uma carta
+              aleatória da raridade escolhida.
             </p>
             {message && (
               <p
@@ -161,9 +161,9 @@ function CartasPage() {
             <div className="grid gap-2 sm:grid-cols-3">
               {(
                 [
-                  { rarity: 'common' as CardRarity, pts: 5 },
-                  { rarity: 'rare' as CardRarity, pts: 10 },
-                  { rarity: 'legendary' as CardRarity, pts: 25 },
+                  { rarity: 'common' as CardRarity, pts: 1 },
+                  { rarity: 'rare' as CardRarity, pts: 5 },
+                  { rarity: 'legendary' as CardRarity, pts: 10 },
                 ] as const
               ).map(({ rarity, pts }) => {
                 const colors = RARITY_COLORS[rarity]

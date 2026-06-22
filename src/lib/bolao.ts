@@ -617,6 +617,7 @@ function computeX1Standings(
   challengeRows: ChallengeRow[],
   matchById: Map<string, MatchRow>,
   guessRows: GuessRow[],
+  cardRows: { userId: string; cardId: string; acquiredRound: string }[] = [],
 ) {
   const guessByKey = new Map<string, GuessRow>()
   for (const guess of guessRows) {
@@ -692,6 +693,15 @@ function computeX1Standings(
       winnerId,
       status: match.homeScore !== null ? 'resolved' : 'pending',
     })
+  }
+
+  // Deduz custo das cartas compradas com pontos X1
+  for (const card of cardRows) {
+    if (card.acquiredRound !== 'compra') continue
+    const def = CARDS.find((c) => c.id === card.cardId)
+    if (!def) continue
+    const entry = tally.get(card.userId)
+    if (entry) entry.points -= def.cost
   }
 
   const standings = [...tally.values()]
@@ -1265,7 +1275,7 @@ export const CARDS = [
       'Se acertar o resultado, dobra os pontos da partida. Se errar, perde os pontos normais também.',
     icon: '🎲',
     rarity: 'rare' as const,
-    cost: 10,
+    cost: 5,
   },
   {
     id: 'shield',
@@ -1274,7 +1284,7 @@ export const CARDS = [
       'Protege seus pontos de qualquer perda nesta partida (resultado errado = 0 pts, não negativo).',
     icon: '🛡️',
     rarity: 'common' as const,
-    cost: 5,
+    cost: 1,
   },
   {
     id: 'momentum',
@@ -1282,7 +1292,7 @@ export const CARDS = [
     description: 'Ganhe +2 pontos extras se acertar o resultado desta partida.',
     icon: '⚡',
     rarity: 'common' as const,
-    cost: 5,
+    cost: 1,
   },
   {
     id: 'guru_vision',
@@ -1291,7 +1301,7 @@ export const CARDS = [
       'Revela o palpite de um adversário aleatório nesta partida antes de você confirmar o seu.',
     icon: '👁️',
     rarity: 'common' as const,
-    cost: 5,
+    cost: 1,
   },
   {
     id: 'lucky_double',
@@ -1300,7 +1310,7 @@ export const CARDS = [
       'Registre dois palpites diferentes nesta partida. Conta o que tiver mais pontos.',
     icon: '🍀',
     rarity: 'legendary' as const,
-    cost: 25,
+    cost: 10,
   },
   {
     id: 'steal',
@@ -1309,7 +1319,7 @@ export const CARDS = [
       'Rouba 1 ponto do líder do ranking no momento em que o resultado desta partida for confirmado.',
     icon: '🗡️',
     rarity: 'legendary' as const,
-    cost: 25,
+    cost: 10,
   },
   {
     id: 'exact_boost',
@@ -1318,7 +1328,7 @@ export const CARDS = [
       'Se acertar o placar exato, ganha +2 pontos extras além das odds.',
     icon: '🔮',
     rarity: 'rare' as const,
-    cost: 10,
+    cost: 5,
   },
   {
     id: 'comeback',
@@ -1327,7 +1337,7 @@ export const CARDS = [
       'Se você estiver em último lugar no ranking, seus pontos desta partida valem o dobro.',
     icon: '💥',
     rarity: 'rare' as const,
-    cost: 10,
+    cost: 5,
   },
 ] as const
 
@@ -1627,14 +1637,14 @@ async function snapshotStandings() {
 export const getX1Data = createServerFn({ method: 'GET' }).handler(async () => {
   await ensureSeedMatches()
 
-  const [{ asc }, { db }, { guesses, matches, user, x1Challenges }] =
+  const [{ asc }, { db }, { guesses, matches, user, x1Challenges, userCards }] =
     await Promise.all([
       import('drizzle-orm'),
       import('#/db'),
       import('#/db/schema'),
     ])
 
-  const [matchRows, guessRows, userRows, challengeRows] = await Promise.all([
+  const [matchRows, guessRows, userRows, challengeRows, cardRows] = await Promise.all([
     db.select().from(matches).orderBy(asc(matches.startsAt)),
     db
       .select({
@@ -1656,6 +1666,13 @@ export const getX1Data = createServerFn({ method: 'GET' }).handler(async () => {
         status: x1Challenges.status,
       })
       .from(x1Challenges),
+    db
+      .select({
+        userId: userCards.userId,
+        cardId: userCards.cardId,
+        acquiredRound: userCards.acquiredRound,
+      })
+      .from(userCards),
   ])
 
   const matchById = new Map(matchRows.map((match) => [match.id, match]))
@@ -1664,6 +1681,7 @@ export const getX1Data = createServerFn({ method: 'GET' }).handler(async () => {
     challengeRows,
     matchById,
     guessRows,
+    cardRows,
   )
 
   const matchInfoById = new Map(
@@ -2085,18 +2103,17 @@ export const buyCard = createServerFn({ method: 'POST' })
     const sessionUser = await getSessionUser()
     if (!sessionUser) throw new Error('Voce precisa entrar para comprar cartas.')
 
-    // Custo por raridade
-    const costs = { common: 5, rare: 10, legendary: 25 }
+    // Custo por raridade (deduzido dos pontos X1)
+    const costs = { common: 1, rare: 5, legendary: 10 }
     const cost = costs[data.rarity]
 
-    // Verifica se o usuario tem pontos suficientes
-    // (calcula pontos atuais do usuario no ranking)
-    const [{ asc }, { guesses, matches, user, x1Challenges, championPicks }] =
-      await Promise.all([import('drizzle-orm'), import('#/db/schema')])
+    // Verifica saldo X1 do usuario
+    const [{ guesses, matches, user, x1Challenges }] =
+      await Promise.all([import('#/db/schema')])
 
-    const [matchRows, guessRows, userRows, challengeRows, championPickRows] =
+    const [matchRows, guessRows, userRows, challengeRows, existingCards] =
       await Promise.all([
-        db.select().from(matches).orderBy(asc(matches.startsAt)),
+        db.select().from(matches),
         db
           .select({
             id: guesses.id,
@@ -2121,27 +2138,27 @@ export const buyCard = createServerFn({ method: 'POST' })
           .from(x1Challenges),
         db
           .select({
-            userId: championPicks.userId,
-            team: championPicks.team,
-            bonusPoints: championPicks.bonusPoints,
+            userId: userCards.userId,
+            cardId: userCards.cardId,
+            acquiredRound: userCards.acquiredRound,
           })
-          .from(championPicks),
+          .from(userCards),
       ])
 
     const matchById = new Map(matchRows.map((m) => [m.id, m]))
-    const standings = computeStandings(
+    const { standings } = computeX1Standings(
       userRows,
-      guessRows,
-      matchById,
       challengeRows,
-      championPickRows,
+      matchById,
+      guessRows,
+      existingCards,
     )
     const playerEntry = standings.find((p) => p.id === sessionUser.id)
-    const currentPoints = playerEntry?.points ?? 0
+    const currentX1Points = playerEntry?.points ?? 0
 
-    if (currentPoints < cost) {
+    if (currentX1Points < cost) {
       throw new Error(
-        `Voce precisa de ${cost} pontos para comprar uma carta ${data.rarity}. Voce tem ${currentPoints}.`,
+        `Voce precisa de ${cost} pontos X1 para comprar uma carta ${data.rarity}. Voce tem ${currentX1Points}.`,
       )
     }
 
