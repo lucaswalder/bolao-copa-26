@@ -41,7 +41,9 @@ import {
   getBolaoData,
   respondX1Challenge,
   saveGuess,
+  useCard,
 } from '#/lib/bolao'
+import type { CardRarity } from '#/lib/bolao'
 
 export const Route = createFileRoute('/')({
   loader: () => getBolaoData(),
@@ -148,6 +150,26 @@ function Home() {
                   <Brain className="size-4" />
                   Guru do Futebol
                 </Link>
+                <Link
+                  to="/x1"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white"
+                >
+                  <Swords className="size-4" />
+                  Ranking X1
+                </Link>
+                <Link
+                  to="/missoes"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white"
+                >
+                  <Trophy className="size-4" />
+                  Missões
+                </Link>
+                <Link
+                  to="/cartas"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white/80 px-4 text-sm font-semibold text-[var(--sea-ink)] shadow-sm hover:bg-white"
+                >
+                  🃏 Cartas
+                </Link>
                 {data.user?.isAdmin ? (
                   <Link
                     to="/admin"
@@ -223,6 +245,7 @@ function Home() {
                     canGuess={Boolean(data.user)}
                     players={data.players}
                     currentUserId={data.user?.id ?? null}
+                    userAvailableCards={data.userAvailableCards}
                   />
                 ))
               )}
@@ -630,23 +653,27 @@ function AuthCard({ onDone }: { onDone: () => void }) {
   )
 }
 
+type UserCard = BolaoData['userAvailableCards'][number]
+
 function MatchCard({
   match,
   canGuess,
   players,
   currentUserId,
+  userAvailableCards = [],
 }: {
   match: MatchItem
   canGuess: boolean
   players: Player[]
   currentUserId: string | null
+  userAvailableCards?: UserCard[]
 }) {
   const router = useRouter()
   const saveGuessFn = useServerFn(saveGuess)
+  const useCardFn = useServerFn(useCard)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const isLocked = new Date(match.startsAt).getTime() <= Date.now()
-  const hasResult = match.homeScore !== null && match.awayScore !== null
+  const [isUsingCard, setIsUsingCard] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -678,6 +705,21 @@ function MatchCard({
       setIsSaving(false)
     }
   }
+
+  async function handleUseCard(instanceId: string) {
+    setIsUsingCard(true)
+    try {
+      await useCardFn({ data: { cardInstanceId: instanceId, matchId: match.id } })
+      await router.invalidate()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao usar carta.')
+    } finally {
+      setIsUsingCard(false)
+    }
+  }
+
+  const isLocked = new Date(match.startsAt).getTime() <= Date.now()
+  const hasResult = match.homeScore !== null && match.awayScore !== null
 
   return (
     <Card className="feature-card">
@@ -711,7 +753,19 @@ function MatchCard({
       <CardContent>
         {hasResult ? (
           <div className="mb-4 rounded-md border border-[var(--line)] bg-white/70 p-3 text-center text-sm font-bold">
-            Resultado: {match.homeScore} x {match.awayScore}
+            <span>
+              Resultado: {match.homeScore} x {match.awayScore}
+            </span>
+            {match.oddsMultiplier && match.oddsMultiplier >= 3 ? (
+              <span
+                className="ml-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-black text-amber-700"
+                title="Placar raro! Odds elevadas para quem acertou."
+              >
+                {match.oddsMultiplier === 6
+                  ? '🔥 Ninguém acertou! 6x'
+                  : `🔥 ${match.oddsMultiplier}x odds`}
+              </span>
+            ) : null}
           </div>
         ) : null}
         <form
@@ -745,7 +799,9 @@ function MatchCard({
         {match.guess ? (
           <p className="mt-3 text-sm font-semibold text-[var(--sea-ink-soft)]">
             Seu palpite: {match.guess.homeScore} x {match.guess.awayScore}
-            {hasResult ? ` · ${match.guess.points} ponto(s)` : ''}
+            {hasResult
+              ? ` · ${match.guess.points} ponto(s)${match.oddsMultiplier && match.oddsMultiplier > 1 && match.guess.points > 2 ? ` (odds ${match.oddsMultiplier}x)` : ''}`
+              : ''}
           </p>
         ) : null}
         {error ? (
@@ -762,8 +818,91 @@ function MatchCard({
             hasResult={hasResult}
           />
         ) : null}
+        {currentUserId && !isLocked && !hasResult ? (
+          userAvailableCards.length > 0 ? (
+            <CardSection
+              availableCards={userAvailableCards}
+              usedCards={match.cardsUsed}
+              onUseCard={handleUseCard}
+              isUsingCard={isUsingCard}
+            />
+          ) : null
+        ) : match.cardsUsed.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--line)] pt-3">
+            <p className="w-full text-xs font-bold text-[var(--sea-ink-soft)]">🃏 Cartas usadas</p>
+            {match.cardsUsed.map((cardId) => (
+              <span
+                key={cardId}
+                className="text-xs rounded border border-zinc-200 bg-zinc-100 px-2 py-0.5 font-medium text-zinc-700"
+              >
+                🃏 {cardId}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
+  )
+}
+
+const CARD_RARITY_COLORS: Record<CardRarity, string> = {
+  common: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+  rare: 'bg-blue-100 text-blue-700 border-blue-200',
+  legendary: 'bg-amber-100 text-amber-700 border-amber-300',
+}
+
+function CardSection({
+  availableCards,
+  usedCards,
+  onUseCard,
+  isUsingCard,
+}: {
+  match?: MatchItem
+  availableCards: UserCard[]
+  usedCards: string[]
+  onUseCard: (cardId: string) => void
+  isUsingCard: boolean
+}) {
+  const alreadyUsedOnThisMatch = usedCards.length > 0
+  return (
+    <div className="mt-3 border-t border-[var(--line)] pt-3">
+      <p className="mb-2 text-xs font-bold text-[var(--sea-ink-soft)]">
+        🃏 Cartas
+      </p>
+      {alreadyUsedOnThisMatch ? (
+        <div className="flex flex-wrap gap-1.5">
+          {usedCards.map((cardId) => {
+            const card = availableCards.find((c) => c.cardId === cardId) ?? {
+              icon: '🃏',
+              name: cardId,
+              rarity: 'common' as CardRarity,
+            }
+            return (
+              <span
+                key={cardId}
+                className={`text-xs rounded border px-2 py-0.5 font-medium ${CARD_RARITY_COLORS[card.rarity]}`}
+              >
+                {card.icon} {card.name} ✓
+              </span>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {availableCards.map((card) => (
+            <button
+              key={card.instanceId}
+              onClick={() => onUseCard(card.instanceId)}
+              disabled={isUsingCard}
+              className={`text-xs rounded border px-2 py-1 font-medium transition-opacity hover:opacity-80 disabled:opacity-50 ${CARD_RARITY_COLORS[card.rarity]}`}
+              title={card.name}
+            >
+              {card.icon} {card.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -1123,7 +1262,19 @@ function RulesCard() {
         <div className="flex items-center gap-3 rounded-md bg-white/70 p-3">
           <Trophy className="size-5 text-yellow-700" />
           <p className="text-sm font-bold">
-            Acertar o placar exato = 1 ponto extra
+            Acertar o placar exato = 1 ponto extra (com odds)
+          </p>
+        </div>
+        <div className="flex items-center gap-3 rounded-md bg-white/70 p-3">
+          <Flag className="size-5 text-amber-600" />
+          <p className="text-sm font-bold">
+            Placar raro = ponto extra multiplicado (até 6x)
+          </p>
+        </div>
+        <div className="flex items-center gap-3 rounded-md bg-white/70 p-3">
+          <Swords className="size-5 text-red-500" />
+          <p className="text-sm font-bold">
+            X1 tem ranking próprio — não afeta o ranking geral
           </p>
         </div>
       </CardContent>

@@ -9,14 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as X1RouteImport } from './routes/x1'
+import { Route as MissoesRouteImport } from './routes/missoes'
 import { Route as GuruRouteImport } from './routes/guru'
+import { Route as CartasRouteImport } from './routes/cartas'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const X1Route = X1RouteImport.update({
+  id: '/x1',
+  path: '/x1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissoesRoute = MissoesRouteImport.update({
+  id: '/missoes',
+  path: '/missoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuruRoute = GuruRouteImport.update({
   id: '/guru',
   path: '/guru',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartasRoute = CartasRouteImport.update({
+  id: '/cartas',
+  path: '/cartas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -38,44 +56,92 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cartas': typeof CartasRoute
   '/guru': typeof GuruRoute
+  '/missoes': typeof MissoesRoute
+  '/x1': typeof X1Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cartas': typeof CartasRoute
   '/guru': typeof GuruRoute
+  '/missoes': typeof MissoesRoute
+  '/x1': typeof X1Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/cartas': typeof CartasRoute
   '/guru': typeof GuruRoute
+  '/missoes': typeof MissoesRoute
+  '/x1': typeof X1Route
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/guru' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/cartas'
+    | '/guru'
+    | '/missoes'
+    | '/x1'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/guru' | '/api/auth/$'
-  id: '__root__' | '/' | '/admin' | '/guru' | '/api/auth/$'
+  to: '/' | '/admin' | '/cartas' | '/guru' | '/missoes' | '/x1' | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/cartas'
+    | '/guru'
+    | '/missoes'
+    | '/x1'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CartasRoute: typeof CartasRoute
   GuruRoute: typeof GuruRoute
+  MissoesRoute: typeof MissoesRoute
+  X1Route: typeof X1Route
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/x1': {
+      id: '/x1'
+      path: '/x1'
+      fullPath: '/x1'
+      preLoaderRoute: typeof X1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/missoes': {
+      id: '/missoes'
+      path: '/missoes'
+      fullPath: '/missoes'
+      preLoaderRoute: typeof MissoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guru': {
       id: '/guru'
       path: '/guru'
       fullPath: '/guru'
       preLoaderRoute: typeof GuruRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cartas': {
+      id: '/cartas'
+      path: '/cartas'
+      fullPath: '/cartas'
+      preLoaderRoute: typeof CartasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -105,7 +171,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CartasRoute: CartasRoute,
   GuruRoute: GuruRoute,
+  MissoesRoute: MissoesRoute,
+  X1Route: X1Route,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

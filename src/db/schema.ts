@@ -155,3 +155,37 @@ export const x1Challenges = pgTable(
   },
   (table) => [index('x1_match_idx').on(table.matchId)],
 )
+
+export const userCards = pgTable(
+  'user_cards',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    cardId: text('card_id').notNull(),
+    acquiredRound: text('acquired_round').notNull(),
+    acquiredAt: timestamp('acquired_at').notNull().defaultNow(),
+    usedAt: timestamp('used_at'),
+    usedOnMatchId: text('used_on_match_id').references(() => matches.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (table) => [index('user_cards_user_idx').on(table.userId)],
+)
+
+export const userMissions = pgTable(
+  'user_missions',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    missionId: text('mission_id').notNull(),
+    progress: integer('progress').notNull().default(0),
+    completedAt: timestamp('completed_at'),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('user_mission_idx').on(table.userId, table.missionId),
+  ],
+)
