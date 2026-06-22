@@ -256,6 +256,19 @@ var Check = createLucideIcon("check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var CircleCheckBig = createLucideIcon("circle-check-big", [["path", {
+	d: "M21.801 10A10 10 0 1 1 17 3.335",
+	key: "yps3ct"
+}], ["path", {
+	d: "m9 11 3 3L22 4",
+	key: "1pflzl"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CircleCheck = createLucideIcon("circle-check", [["circle", {
 	cx: "12",
 	cy: "12",
@@ -271,12 +284,46 @@ var CircleCheck = createLucideIcon("circle-check", [["circle", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Clock = createLucideIcon("clock", [["circle", {
+	cx: "12",
+	cy: "12",
+	r: "10",
+	key: "1mglay"
+}], ["path", {
+	d: "M12 6v6l4 2",
+	key: "mmk7yg"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Crown = createLucideIcon("crown", [["path", {
 	d: "M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z",
 	key: "1vdc57"
 }], ["path", {
 	d: "M5 21h14",
 	key: "11awu3"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Equal = createLucideIcon("equal", [["line", {
+	x1: "5",
+	x2: "19",
+	y1: "9",
+	y2: "9",
+	key: "1nwqeh"
+}], ["line", {
+	x1: "5",
+	x2: "19",
+	y1: "15",
+	y2: "15",
+	key: "g8yjpy"
 }]]);
 /**
 * @license lucide-react v0.577.0 - ISC
@@ -460,6 +507,80 @@ var ShieldCheck = createLucideIcon("shield-check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ShoppingCart = createLucideIcon("shopping-cart", [
+	["circle", {
+		cx: "8",
+		cy: "21",
+		r: "1",
+		key: "jimo8o"
+	}],
+	["circle", {
+		cx: "19",
+		cy: "21",
+		r: "1",
+		key: "13723u"
+	}],
+	["path", {
+		d: "M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12",
+		key: "9zh506"
+	}]
+]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Sparkles = createLucideIcon("sparkles", [
+	["path", {
+		d: "M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z",
+		key: "1s2grr"
+	}],
+	["path", {
+		d: "M20 2v4",
+		key: "1rf3ol"
+	}],
+	["path", {
+		d: "M22 4h-4",
+		key: "gwowj6"
+	}],
+	["circle", {
+		cx: "4",
+		cy: "20",
+		r: "2",
+		key: "6kqj1y"
+	}]
+]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Sword = createLucideIcon("sword", [
+	["path", {
+		d: "m11 19-6-6",
+		key: "s7kpr"
+	}],
+	["path", {
+		d: "m5 21-2-2",
+		key: "1kw20b"
+	}],
+	["path", {
+		d: "m8 16-4 4",
+		key: "1oqv8h"
+	}],
+	["path", {
+		d: "M9.5 17.5 21 6V3h-3L6.5 14.5",
+		key: "pkxemp"
+	}]
+]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Swords = createLucideIcon("swords", [
 	["polyline", {
 		points: "14.5 17.5 3 6 3 3 6 3 17.5 14.5",
@@ -590,4 +711,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ArrowDown as S, Check as _, ShieldCheck as a, ArrowUp as b, RotateCcw as c, LogOut as d, Lock as f, CircleCheck as g, Crown as h, Swords as i, Pencil as l, Flag as m, UserPlus as n, Search as o, ListFilter as p, Trophy as r, Save as s, X as t, Medal as u, CalendarDays as v, ArrowLeft as x, Brain as y };
+export { Check as C, ArrowLeft as D, ArrowUp as E, ArrowDown as O, CircleCheckBig as S, Brain as T, Flag as _, Sword as a, Clock as b, ShieldCheck as c, RotateCcw as d, Pencil as f, ListFilter as g, Lock as h, Swords as i, Search as l, LogOut as m, UserPlus as n, Sparkles as o, Medal as p, Trophy as r, ShoppingCart as s, X as t, Save as u, Equal as v, CalendarDays as w, CircleCheck as x, Crown as y };
