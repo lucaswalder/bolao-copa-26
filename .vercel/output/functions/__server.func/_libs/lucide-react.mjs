@@ -256,6 +256,26 @@ var Check = createLucideIcon("check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ChevronDown = createLucideIcon("chevron-down", [["path", {
+	d: "m6 9 6 6 6-6",
+	key: "qrunsl"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ChevronRight = createLucideIcon("chevron-right", [["path", {
+	d: "m9 18 6-6-6-6",
+	key: "mthhwq"
+}]]);
+/**
+* @license lucide-react v0.577.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CircleCheckBig = createLucideIcon("circle-check-big", [["path", {
 	d: "M21.801 10A10 10 0 1 1 17 3.335",
 	key: "yps3ct"
@@ -277,21 +297,6 @@ var CircleCheck = createLucideIcon("circle-check", [["circle", {
 }], ["path", {
 	d: "m9 12 2 2 4-4",
 	key: "dzmm74"
-}]]);
-/**
-* @license lucide-react v0.577.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Clock = createLucideIcon("clock", [["circle", {
-	cx: "12",
-	cy: "12",
-	r: "10",
-	key: "1mglay"
-}], ["path", {
-	d: "M12 6v6l4 2",
-	key: "mmk7yg"
 }]]);
 /**
 * @license lucide-react v0.577.0 - ISC
@@ -711,4 +716,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Check as C, ArrowLeft as D, ArrowUp as E, ArrowDown as O, CircleCheckBig as S, Brain as T, Flag as _, Sword as a, Clock as b, ShieldCheck as c, RotateCcw as d, Pencil as f, ListFilter as g, Lock as h, Swords as i, Search as l, LogOut as m, UserPlus as n, Sparkles as o, Medal as p, Trophy as r, ShoppingCart as s, X as t, Save as u, Equal as v, CalendarDays as w, CircleCheck as x, Crown as y };
+export { ChevronDown as C, ArrowUp as D, Brain as E, ArrowLeft as O, ChevronRight as S, CalendarDays as T, Flag as _, Sword as a, CircleCheck as b, ShieldCheck as c, RotateCcw as d, Pencil as f, ListFilter as g, Lock as h, Swords as i, ArrowDown as k, Search as l, LogOut as m, UserPlus as n, Sparkles as o, Medal as p, Trophy as r, ShoppingCart as s, X as t, Save as u, Equal as v, Check as w, CircleCheckBig as x, Crown as y };

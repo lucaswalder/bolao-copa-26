@@ -58,6 +58,30 @@ function calculatePoints(
   return { points, hitOutcome, hitExact, oddsMultiplier }
 }
 
+// Estima as odds pre-jogo com base em quantos jogadores tem o mesmo palpite exato.
+// Quanto mais raro o palpite, maior o potencial multiplicador.
+function estimatePreMatchOdds(
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+  guessRows: GuessRow[],
+): number {
+  const matchGuesses = guessRows.filter((g) => g.matchId === matchId)
+  if (matchGuesses.length === 0) return 6
+
+  const sameGuess = matchGuesses.filter(
+    (g) => g.homeScore === homeScore && g.awayScore === awayScore,
+  ).length
+
+  const ratio = sameGuess / matchGuesses.length
+  if (ratio > 0.5) return 1
+  if (ratio > 0.2) return 2
+  if (ratio > 0.1) return 3
+  if (ratio > 0.05) return 4
+  if (sameGuess > 0) return 5
+  return 6
+}
+
 // Calcula o multiplicador de odds de um placar exato com base na proporcao
 // de jogadores que acertaram. Quanto menor a proporcao, maior o multiplicador.
 // So se aplica apos o resultado ser confirmado.
@@ -884,6 +908,15 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
         const oddsMultiplier = hasResult
           ? getOddsMultiplier(match.id, match, guessRows)
           : null
+        const estimatedOdds =
+          !hasResult && userGuess
+            ? estimatePreMatchOdds(
+                match.id,
+                userGuess.homeScore,
+                userGuess.awayScore,
+                guessRows,
+              )
+            : null
         const cardsUsed = userCardsUsedByMatch.get(match.id) ?? []
 
         return {
@@ -892,6 +925,7 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
           createdAt: match.createdAt.toISOString(),
           updatedAt: match.updatedAt.toISOString(),
           oddsMultiplier,
+          estimatedOdds,
           cardsUsed,
           guess: userGuess
             ? {
@@ -1226,6 +1260,8 @@ export const MISSIONS = [
     description: 'Acerte o resultado de 3 partidas seguidas',
     icon: '🎩',
     goal: 3,
+    reward: '1 Carta Rara',
+    rewardRarity: 'rare' as const,
   },
   {
     id: 'sniper',
@@ -1233,13 +1269,17 @@ export const MISSIONS = [
     description: 'Acerte 3 placares exatos',
     icon: '🎯',
     goal: 3,
+    reward: '1 Carta Rara',
+    rewardRarity: 'rare' as const,
   },
   {
     id: 'x1_king',
     name: 'Rei do X1',
-    description: 'Ganhe 5 X1s',
+    description: 'Ganhe 5 duelos X1',
     icon: '⚔️',
     goal: 5,
+    reward: '1 Carta Lendária',
+    rewardRarity: 'legendary' as const,
   },
   {
     id: 'underdog',
@@ -1247,13 +1287,17 @@ export const MISSIONS = [
     description: 'Acerte um placar com odds de 3x ou mais',
     icon: '🦁',
     goal: 1,
+    reward: '1 Carta Lendária',
+    rewardRarity: 'legendary' as const,
   },
   {
-    id: 'perfect_week',
-    name: 'Semana Perfeita',
-    description: 'Acerte o resultado de 5 partidas em um mesmo dia',
+    id: 'gold_sequence',
+    name: 'Sequência de Ouro',
+    description: 'Acerte o resultado de 5 partidas consecutivas',
     icon: '⭐',
     goal: 5,
+    reward: '1 Carta Lendária',
+    rewardRarity: 'legendary' as const,
   },
   {
     id: 'double_exact',
@@ -1261,6 +1305,8 @@ export const MISSIONS = [
     description: 'Acerte 2 placares exatos no mesmo dia',
     icon: '🔥',
     goal: 2,
+    reward: '1 Carta Comum',
+    rewardRarity: 'common' as const,
   },
 ] as const
 
@@ -1279,20 +1325,20 @@ export const CARDS = [
   },
   {
     id: 'shield',
-    name: 'Escudo',
+    name: 'Escudo X1',
     description:
-      'Protege seus pontos de qualquer perda nesta partida (resultado errado = 0 pts, não negativo).',
+      'Use antes de um duelo X1. Se você perder, a aposta é devolvida — você não perde pontos.',
     icon: '🛡️',
-    rarity: 'common' as const,
-    cost: 1,
+    rarity: 'rare' as const,
+    cost: 5,
   },
   {
     id: 'momentum',
     name: 'Ímpeto',
     description: 'Ganhe +2 pontos extras se acertar o resultado desta partida.',
     icon: '⚡',
-    rarity: 'common' as const,
-    cost: 1,
+    rarity: 'rare' as const,
+    cost: 5,
   },
   {
     id: 'guru_vision',
@@ -1510,15 +1556,6 @@ async function evaluateAllMissions() {
       (g) => g.hitExact && g.oddsMultiplier >= 3,
     )
 
-    // Semana perfeita: 5 resultados corretos no mesmo dia
-    const byDate = new Map<string, number>()
-    for (const g of sortedGuesses) {
-      if (g.hitOutcome) {
-        byDate.set(g.dateKey, (byDate.get(g.dateKey) ?? 0) + 1)
-      }
-    }
-    const maxInDay = Math.max(0, ...byDate.values())
-
     // Duplo Craque: 2 placares exatos no mesmo dia
     const exactByDate = new Map<string, number>()
     for (const g of sortedGuesses) {
@@ -1533,7 +1570,7 @@ async function evaluateAllMissions() {
       sniper: exactCount,
       x1_king: x1Wins,
       underdog: underdogHit ? 1 : 0,
-      perfect_week: maxInDay,
+      gold_sequence: maxStreak,
       double_exact: maxExactInDay,
     }
 

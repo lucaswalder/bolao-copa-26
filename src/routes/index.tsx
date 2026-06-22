@@ -756,14 +756,17 @@ function MatchCard({
             <span>
               Resultado: {match.homeScore} x {match.awayScore}
             </span>
-            {match.oddsMultiplier && match.oddsMultiplier >= 3 ? (
+            {match.oddsMultiplier && match.oddsMultiplier > 1 ? (
               <span
-                className="ml-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-black text-amber-700"
-                title="Placar raro! Odds elevadas para quem acertou."
+                className={`ml-2 inline-block rounded px-1.5 py-0.5 text-xs font-black ${
+                  match.oddsMultiplier >= 4
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-zinc-100 text-zinc-600'
+                }`}
               >
                 {match.oddsMultiplier === 6
-                  ? '🔥 Ninguém acertou! 6x'
-                  : `🔥 ${match.oddsMultiplier}x odds`}
+                  ? '🔥 Ninguém acertou — 6x'
+                  : `${match.oddsMultiplier}x odds`}
               </span>
             ) : null}
           </div>
@@ -797,12 +800,28 @@ function MatchCard({
           </Button>
         </form>
         {match.guess ? (
-          <p className="mt-3 text-sm font-semibold text-[var(--sea-ink-soft)]">
-            Seu palpite: {match.guess.homeScore} x {match.guess.awayScore}
-            {hasResult
-              ? ` · ${match.guess.points} ponto(s)${match.oddsMultiplier && match.oddsMultiplier > 1 && match.guess.points > 2 ? ` (odds ${match.oddsMultiplier}x)` : ''}`
-              : ''}
-          </p>
+          <div className="mt-3 space-y-1">
+            <p className="text-sm font-semibold text-[var(--sea-ink-soft)]">
+              Seu palpite: {match.guess.homeScore} x {match.guess.awayScore}
+              {hasResult
+                ? ` · ${match.guess.points} ponto(s)`
+                : ''}
+            </p>
+            {hasResult && match.oddsMultiplier && match.oddsMultiplier > 1 && match.guess.points > 2 ? (
+              <p className="text-xs font-black text-amber-600">
+                🔥 Odds {match.oddsMultiplier}x — palpite raro multiplicou seus pontos!
+              </p>
+            ) : null}
+            {!hasResult && match.estimatedOdds && match.estimatedOdds > 1 ? (
+              <p className={`text-xs font-semibold ${match.estimatedOdds >= 4 ? 'text-amber-600' : 'text-zinc-500'}`}>
+                {match.estimatedOdds >= 5
+                  ? `🔥 Palpite único! Potencial ${match.estimatedOdds}x se acertar o placar exato`
+                  : match.estimatedOdds >= 3
+                    ? `⚡ Palpite incomum — potencial ${match.estimatedOdds}x nas odds`
+                    : `Potencial ${match.estimatedOdds}x se acertar o placar exato`}
+              </p>
+            ) : null}
+          </div>
         ) : null}
         {error ? (
           <p className="mt-3 rounded-md border border-red-500/30 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
