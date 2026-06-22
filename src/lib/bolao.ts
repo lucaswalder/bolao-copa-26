@@ -1968,12 +1968,13 @@ export const getMissionsData = createServerFn({ method: 'GET' }).handler(
     }
 
     const players = userRows.map((u) => {
-      const missions = (missionsByUser.get(u.id) ?? []).map((row) => {
-        const def = MISSIONS.find((m) => m.id === row.missionId)!
+      const userMissionRows = missionsByUser.get(u.id) ?? []
+      const missions = MISSIONS.map((def) => {
+        const row = userMissionRows.find((r) => r.missionId === def.id)
         return {
           ...def,
-          progress: row.progress,
-          completedAt: row.completedAt?.toISOString() ?? null,
+          progress: row?.progress ?? 0,
+          completedAt: row?.completedAt?.toISOString() ?? null,
         }
       })
       return {

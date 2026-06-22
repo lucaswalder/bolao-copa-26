@@ -3,8 +3,8 @@ import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import "./bolao-BmiEFycs.mjs";
 import { a as CardTitle, i as CardHeader, n as CardContent, t as Card } from "./card-DgN_QdeO.mjs";
 import { D as ArrowLeft, S as CircleCheckBig, b as Clock } from "../_libs/lucide-react.mjs";
-import { t as Route } from "./missoes-Cmi8DXGS.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/missoes-DSrMAJWA.js
+import { t as Route } from "./missoes-C0TFJNug.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/missoes-ImcwigEP.js
 var import_jsx_runtime = require_jsx_runtime();
 function MissoesPage() {
 	const { players, currentUserId } = Route.useLoaderData();
@@ -32,6 +32,19 @@ function MissoesPage() {
 						})]
 					})]
 				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, {
+					className: "bg-amber-50 border-amber-200",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardContent, {
+						className: "pt-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-sm text-amber-800 font-medium mb-1",
+							children: "Como funcionam as missões?"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs text-amber-700",
+							children: "As missões progridem automaticamente conforme você joga — não é preciso ativar nada. Acerte placares, ganhe duelos X1 e acompanhe a Copa para completá-las."
+						})]
+					})
+				}),
 				currentPlayer ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PlayerMissionsCard, {
 					player: currentPlayer,
 					isCurrentUser: true
@@ -42,11 +55,11 @@ function MissoesPage() {
 						children: "Entre para ver suas missões."
 					})
 				}) }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				otherPlayers.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "space-y-3",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 						className: "text-sm font-bold text-muted-foreground uppercase tracking-wider px-1",
-						children: "Todos os jogadores"
+						children: "Outros jogadores"
 					}), otherPlayers.map((player) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PlayerMissionsCard, { player }, player.id))]
 				})
 			]
@@ -55,7 +68,7 @@ function MissoesPage() {
 }
 function PlayerMissionsCard({ player, isCurrentUser }) {
 	const completedCount = player.missions.filter((m) => m.completedAt).length;
-	const totalCount = player.missions.length || 6;
+	const totalCount = player.missions.length;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
 		className: isCurrentUser ? "border-2 border-primary/30" : "",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
@@ -70,16 +83,14 @@ function PlayerMissionsCard({ player, isCurrentUser }) {
 					children: [
 						completedCount,
 						"/",
-						totalCount
+						totalCount,
+						" concluídas"
 					]
 				})]
 			})
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
 			className: "space-y-2",
-			children: player.missions.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-xs text-muted-foreground",
-				children: "Nenhuma missão iniciada ainda."
-			}) : player.missions.map((mission) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MissionRow, { mission }, mission.id))
+			children: player.missions.map((mission) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MissionRow, { mission }, mission.id))
 		})]
 	});
 }
@@ -87,7 +98,7 @@ function MissionRow({ mission }) {
 	const completed = !!mission.completedAt;
 	const progressPct = Math.min(100, Math.round(mission.progress / mission.goal * 100));
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: `flex items-center gap-3 rounded-md px-3 py-2 ${completed ? "bg-green-50 border border-green-200" : "bg-white/70 border border-transparent"}`,
+		className: `flex items-center gap-3 rounded-md px-3 py-2.5 ${completed ? "bg-green-50 border border-green-200" : mission.progress > 0 ? "bg-white border border-zinc-200" : "bg-zinc-50 border border-transparent opacity-60"}`,
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 				className: "text-xl shrink-0",
@@ -107,7 +118,7 @@ function MissionRow({ mission }) {
 						className: "text-xs text-muted-foreground",
 						children: mission.description
 					}),
-					!completed && mission.goal > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					!completed && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "mt-1.5 h-1.5 rounded-full bg-zinc-200 overflow-hidden",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "h-full rounded-full bg-primary transition-all",
@@ -117,7 +128,7 @@ function MissionRow({ mission }) {
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-				className: `text-xs font-black shrink-0 ${completed ? "text-green-600" : "text-muted-foreground"}`,
+				className: `text-xs font-black shrink-0 tabular-nums ${completed ? "text-green-600" : "text-muted-foreground"}`,
 				children: [
 					mission.progress,
 					"/",

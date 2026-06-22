@@ -1,6 +1,6 @@
 import { n as createServerFn, t as TSS_SERVER_FUNCTION } from "./ssr.mjs";
 import { _ as string, a as _enum, c as boolean, m as object, p as number } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/bolao-vUx_rJAf.js
+//#region node_modules/.nitro/vite/services/ssr/assets/bolao-BpRWUa3Y.js
 var createServerRpc = (serverFnMeta, splitImportFn) => {
 	const url = "/_serverFn/" + serverFnMeta.id;
 	return Object.assign(splitImportFn, {
@@ -1380,11 +1380,13 @@ var getMissionsData = createServerFn({ method: "GET" }).handler(getMissionsData_
 	return {
 		missions: MISSIONS,
 		players: userRows.map((u) => {
-			const missions = (missionsByUser.get(u.id) ?? []).map((row) => {
+			const userMissionRows = missionsByUser.get(u.id) ?? [];
+			const missions = MISSIONS.map((def) => {
+				const row = userMissionRows.find((r) => r.missionId === def.id);
 				return {
-					...MISSIONS.find((m) => m.id === row.missionId),
-					progress: row.progress,
-					completedAt: row.completedAt?.toISOString() ?? null
+					...def,
+					progress: row?.progress ?? 0,
+					completedAt: row?.completedAt?.toISOString() ?? null
 				};
 			});
 			return {

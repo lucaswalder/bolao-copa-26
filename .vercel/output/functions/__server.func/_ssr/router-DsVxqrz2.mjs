@@ -4,14 +4,14 @@ import { t as Route$2 } from "./admin-CkcOEp4P.mjs";
 import { t as auth } from "./auth-YRKTgsKj.mjs";
 import { t as Route$3 } from "./cartas-NxuPJhWv.mjs";
 import { t as Route$4 } from "./guru-CyOkECUy.mjs";
-import { t as Route$5 } from "./missoes-Cmi8DXGS.mjs";
+import { t as Route$5 } from "./missoes-C0TFJNug.mjs";
 import { t as Route$6 } from "./x1-DDGJR-rd.mjs";
 import { t as Route$7 } from "./routes-BPM4OOS4.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as setupRouterSsrQueryIntegration } from "../_libs/@tanstack/react-router-ssr-query+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-D_5J3fjM.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DsVxqrz2.js
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-BtOpp1aI.css";
+var styles_default = "/assets/styles-DkbPnHws.css";
 var Route$1 = createRootRouteWithContext()({
 	head: () => ({
 		meta: [

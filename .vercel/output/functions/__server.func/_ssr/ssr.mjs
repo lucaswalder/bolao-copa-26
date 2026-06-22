@@ -4476,7 +4476,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-DkcncvOM.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-utgunKAn.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -4498,59 +4498,59 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"0cb1ead75bb4ea330df8f0d193e3933a07489a7ebe74cb957c0725a5ec497213": {
 		functionName: "buyCard_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"245cb76a28c08279e5ae68941ec6a8d762d9f33ed2b97d9296f5d26d38170834": {
 		functionName: "useCard_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"4deff4110ee7efbb309be401d3db70001ec839a67dcd14d0d5942c9ca76dc871": {
 		functionName: "respondX1Challenge_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"61b583fb06daa194ef7d263a7eea03a7e5bf9c77bfeb777a9aa878d891fccc3a": {
 		functionName: "getAdminData_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"7344d68358c902bb7632730faf92c15b518f7c42f9c133438253da5dad663aa0": {
 		functionName: "getMissionsData_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"770395cb0a54d163507d72e39c35d4e6be55257ab05c3668cac486e9efe5924f": {
 		functionName: "saveGuess_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"7dd6c9ca547d6c40b1e74b29cea701c1d47d95d63e6a2cfbf87ccafd37aaecac": {
 		functionName: "getCardsData_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"8b61371e396161395766012da1e15f18fdb5405546f019dd496902f635393c6f": {
 		functionName: "createX1Challenge_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"9c0ae71b2df8f6a272c3b86699a0f3cc1c9037a7549e51873626dc41cdbc085c": {
 		functionName: "getBolaoData_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"a420957010a8e32db4ac68e7bef5b4fda92caf86f52c89f3d6b97fe7c358b3ec": {
 		functionName: "getX1Data_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"d35208f0ba90f8bb98608fde71f64bd72848f6d260417b0c68a0424a4ec520b9": {
 		functionName: "cancelX1Challenge_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"d6fe564b0e75085bdbf6bb714c257296042a8409381c1bfe8b3128b4c5d3b81a": {
 		functionName: "saveMatchResult_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"e44b322f32410f84e1bf091ad37ae41784ad44497c361303107076885f0a201f": {
 		functionName: "saveChampionPick_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	},
 	"fec45bad692ad4d1175fb8a5a2bdd2929165eb0fbb53ba1c2d8755e165bde2fe": {
 		functionName: "getGuruData_createServerFn_handler",
-		importer: () => import("./bolao-vUx_rJAf.mjs")
+		importer: () => import("./bolao-BpRWUa3Y.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -6994,7 +6994,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-D_5J3fjM.mjs"),
+		import("./router-DsVxqrz2.mjs"),
 		import("./start-BHSdyiMs.mjs"),
 		import("./empty-plugin-adapters-D7NB1rCe.mjs")
 	]);
