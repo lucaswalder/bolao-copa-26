@@ -1312,6 +1312,9 @@ export const MISSIONS = [
 
 type MissionId = (typeof MISSIONS)[number]['id']
 
+// Missoes so contam partidas a partir desta data
+const MISSIONS_START_DATE = new Date('2026-06-25T00:00:00.000Z')
+
 // Catalogo de cartas especiais
 export const CARDS = [
   {
@@ -1455,10 +1458,10 @@ async function distributeRoundCards(round: string) {
 async function evaluateAllMissions() {
   const [
     { db },
-    { guesses, matches, user, x1Challenges, userMissions },
+    { guesses, matches, user, x1Challenges, userMissions, userCards },
   ] = await Promise.all([import('#/db'), import('#/db/schema')])
 
-  const [matchRows, guessRows, userRows, challengeRows] = await Promise.all([
+  const [matchRows, guessRows, userRows, challengeRows, existingMissionRows] = await Promise.all([
     db.select().from(matches),
     db
       .select({
@@ -1480,10 +1483,25 @@ async function evaluateAllMissions() {
         status: x1Challenges.status,
       })
       .from(x1Challenges),
+    db
+      .select({
+        userId: userMissions.userId,
+        missionId: userMissions.missionId,
+        completedAt: userMissions.completedAt,
+      })
+      .from(userMissions),
   ])
 
+  // Index das missoes existentes para detectar conclusoes novas
+  const existingMissionByKey = new Map(
+    existingMissionRows.map((r) => [`${r.userId}:${r.missionId}`, r]),
+  )
+
   const confirmedMatches = matchRows.filter(
-    (m) => m.homeScore !== null && m.awayScore !== null,
+    (m) =>
+      m.homeScore !== null &&
+      m.awayScore !== null &&
+      m.startsAt >= MISSIONS_START_DATE,
   )
   const matchById = new Map(matchRows.map((m) => [m.id, m]))
 
@@ -1574,26 +1592,51 @@ async function evaluateAllMissions() {
       double_exact: maxExactInDay,
     }
 
+    const { randomUUID } = await import('node:crypto')
+
     for (const mission of MISSIONS) {
       const progress = progressMap[mission.id]
       const completed = progress >= mission.goal
+      const existingKey = `${player.id}:${mission.id}`
+      const existing = existingMissionByKey.get(existingKey)
+      const wasCompleted = !!existing?.completedAt
+      const completedAt = completed ? (existing?.completedAt ?? new Date()) : null
+
       await db
         .insert(userMissions)
         .values({
           userId: player.id,
           missionId: mission.id,
           progress,
-          completedAt: completed ? new Date() : null,
+          completedAt,
           updatedAt: new Date(),
         })
         .onConflictDoUpdate({
           target: [userMissions.userId, userMissions.missionId],
           set: {
             progress,
-            completedAt: completed ? new Date() : null,
+            completedAt,
             updatedAt: new Date(),
           },
         })
+
+      // Cria carta de recompensa na primeira vez que a missao e concluida
+      if (completed && !wasCompleted) {
+        const cardsByRarity = {
+          common: CARDS.filter((c) => c.rarity === 'common').map((c) => c.id),
+          rare: CARDS.filter((c) => c.rarity === 'rare').map((c) => c.id),
+          legendary: CARDS.filter((c) => c.rarity === 'legendary').map((c) => c.id),
+        }
+        const pool = cardsByRarity[mission.rewardRarity] as CardId[]
+        const drawnCardId = pool[Math.floor(Math.random() * pool.length)]
+        await db.insert(userCards).values({
+          id: randomUUID(),
+          userId: player.id,
+          cardId: drawnCardId,
+          acquiredRound: `missao_${mission.id}`,
+          acquiredAt: new Date(),
+        })
+      }
     }
   }
 }
