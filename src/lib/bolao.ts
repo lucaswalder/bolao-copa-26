@@ -31,9 +31,13 @@ function calculatePoints(
   guess: {
     homeScore: number
     awayScore: number
+    guessWinnerTeam?: string | null
     match: {
       homeScore: ScoreValue
       awayScore: ScoreValue
+      winnerTeam?: string | null
+      homeTeam?: string
+      awayTeam?: string
     }
   },
   oddsMultiplier = 1,
@@ -42,7 +46,7 @@ function calculatePoints(
   const resultAway = guess.match.awayScore
 
   if (resultHome === null || resultAway === null) {
-    return { points: 0, hitOutcome: false, hitExact: false, oddsMultiplier: 1 }
+    return { points: 0, hitOutcome: false, hitExact: false, hitWinner: false, oddsMultiplier: 1 }
   }
 
   const hitOutcome =
@@ -51,11 +55,18 @@ function calculatePoints(
   const hitExact =
     guess.homeScore === resultHome && guess.awayScore === resultAway
 
+  // Acertou o classificado no mata-mata (+1 ponto)
+  const actualWinner = guess.match.winnerTeam
+    ?? (resultHome > resultAway ? guess.match.homeTeam : resultAway > resultHome ? guess.match.awayTeam : null)
+  const hitWinner =
+    !!guess.guessWinnerTeam && !!actualWinner && guess.guessWinnerTeam === actualWinner
+
   // Odds multiplicam apenas o ponto extra do placar exato, nao o ponto de resultado
   const exactBonus = hitExact ? Math.round(1 * oddsMultiplier) : 0
-  const points = hitOutcome ? 2 + exactBonus : 0
+  const winnerBonus = hitWinner ? 1 : 0
+  const points = hitOutcome ? 2 + exactBonus + winnerBonus : 0
 
-  return { points, hitOutcome, hitExact, oddsMultiplier }
+  return { points, hitOutcome, hitExact, hitWinner, oddsMultiplier }
 }
 
 // Estima as odds pre-jogo com base em quantos jogadores tem o mesmo palpite exato.
@@ -176,31 +187,51 @@ async function ensureSeedMatches() {
 
   for (const seed of seedMatches) {
     const existing = existingById.get(seed.id)
+    if (!existing) continue
 
-    if (!existing || existing.round !== 'Fase de grupos') continue
+    if (existing.round === 'Fase de grupos') {
+      const shouldUpdate =
+        existing.matchNumber !== seed.matchNumber ||
+        existing.group !== seed.group ||
+        existing.homeTeam !== seed.homeTeam ||
+        existing.awayTeam !== seed.awayTeam ||
+        existing.venue !== seed.venue ||
+        existing.startsAt.getTime() !== seed.startsAt.getTime()
 
-    const shouldUpdate =
-      existing.matchNumber !== seed.matchNumber ||
-      existing.group !== seed.group ||
-      existing.homeTeam !== seed.homeTeam ||
-      existing.awayTeam !== seed.awayTeam ||
-      existing.venue !== seed.venue ||
-      existing.startsAt.getTime() !== seed.startsAt.getTime()
+      if (!shouldUpdate) continue
 
-    if (!shouldUpdate) continue
+      await db
+        .update(matches)
+        .set({
+          matchNumber: seed.matchNumber,
+          group: seed.group,
+          homeTeam: seed.homeTeam,
+          awayTeam: seed.awayTeam,
+          venue: seed.venue,
+          startsAt: seed.startsAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(matches.id, seed.id))
+    } else {
+      // Mata-mata: sincroniza times quando o seed tem times confirmados
+      // (nomes reais, nao placeholders como "1º Grupo A")
+      const isPlaceholder = (name: string) =>
+        /^\d[ºo]/.test(name) || /^[WL]\d+/.test(name) || name.includes('Grupo') || name.includes('Vencedor')
 
-    await db
-      .update(matches)
-      .set({
-        matchNumber: seed.matchNumber,
-        group: seed.group,
-        homeTeam: seed.homeTeam,
-        awayTeam: seed.awayTeam,
-        venue: seed.venue,
-        startsAt: seed.startsAt,
-        updatedAt: new Date(),
-      })
-      .where(eq(matches.id, seed.id))
+      const seedHasHomeTeam = !isPlaceholder(seed.homeTeam)
+      const seedHasAwayTeam = !isPlaceholder(seed.awayTeam)
+
+      const update: Record<string, unknown> = {}
+      if (seedHasHomeTeam && existing.homeTeam !== seed.homeTeam) update.homeTeam = seed.homeTeam
+      if (seedHasAwayTeam && existing.awayTeam !== seed.awayTeam) update.awayTeam = seed.awayTeam
+
+      if (Object.keys(update).length === 0) continue
+
+      await db
+        .update(matches)
+        .set({ ...update, updatedAt: new Date() })
+        .where(eq(matches.id, seed.id))
+    }
   }
 }
 
@@ -361,6 +392,7 @@ type GuessRow = {
   matchId: string
   homeScore: number
   awayScore: number
+  guessWinnerTeam?: string | null
 }
 
 type ChallengeRow = {
@@ -548,7 +580,7 @@ function computeStandings(
     entry.guessesCount += 1
     const oddsMultiplier = oddsMultiplierByMatch.get(guess.matchId) ?? 1
     const result = calculatePoints(
-      { homeScore: guess.homeScore, awayScore: guess.awayScore, match },
+      { homeScore: guess.homeScore, awayScore: guess.awayScore, guessWinnerTeam: guess.guessWinnerTeam, match },
       oddsMultiplier,
     )
 
@@ -779,6 +811,7 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
           matchId: guesses.matchId,
           homeScore: guesses.homeScore,
           awayScore: guesses.awayScore,
+          guessWinnerTeam: guesses.guessWinnerTeam,
         })
         .from(guesses),
       db.select({ id: user.id, name: user.name, email: user.email }).from(user),
@@ -931,10 +964,12 @@ export const getBolaoData = createServerFn({ method: 'GET' }).handler(
             ? {
                 homeScore: userGuess.homeScore,
                 awayScore: userGuess.awayScore,
+                guessWinnerTeam: userGuess.guessWinnerTeam,
                 points: calculatePoints(
                   {
                     homeScore: userGuess.homeScore,
                     awayScore: userGuess.awayScore,
+                    guessWinnerTeam: userGuess.guessWinnerTeam,
                     match,
                   },
                   oddsMultiplier ?? 1,
@@ -1068,6 +1103,7 @@ export const saveGuess = createServerFn({ method: 'POST' })
       matchId: z.string().min(1),
       homeScore: z.number().int().min(0).max(30),
       awayScore: z.number().int().min(0).max(30),
+      guessWinnerTeam: z.string().min(1).nullable().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -1099,6 +1135,16 @@ export const saveGuess = createServerFn({ method: 'POST' })
       throw new Error('Palpites ficam bloqueados depois do inicio do jogo.')
     }
 
+    const isKnockout = match.round !== 'Fase de grupos'
+
+    // Em jogos de mata-mata com placar empatado, o classificado e obrigatorio
+    if (isKnockout && data.homeScore === data.awayScore && !data.guessWinnerTeam) {
+      throw new Error('No empate, escolha quem avança nos pênaltis.')
+    }
+
+    // guessWinnerTeam so se aplica a mata-mata
+    const guessWinnerTeam = isKnockout ? (data.guessWinnerTeam ?? null) : null
+
     await db
       .insert(guesses)
       .values({
@@ -1107,6 +1153,7 @@ export const saveGuess = createServerFn({ method: 'POST' })
         matchId: data.matchId,
         homeScore: data.homeScore,
         awayScore: data.awayScore,
+        guessWinnerTeam,
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
@@ -1114,6 +1161,7 @@ export const saveGuess = createServerFn({ method: 'POST' })
         set: {
           homeScore: data.homeScore,
           awayScore: data.awayScore,
+          guessWinnerTeam,
           updatedAt: new Date(),
         },
       })

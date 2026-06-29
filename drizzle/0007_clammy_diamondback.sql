@@ -1,0 +1,1 @@
+ALTER TABLE "guesses" ADD COLUMN "guess_winner_team" text;

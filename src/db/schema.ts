@@ -108,6 +108,7 @@ export const guesses = pgTable(
       .references(() => matches.id, { onDelete: 'cascade' }),
     homeScore: integer('home_score').notNull(),
     awayScore: integer('away_score').notNull(),
+    guessWinnerTeam: text('guess_winner_team'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

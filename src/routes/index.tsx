@@ -675,6 +675,8 @@ function MatchCard({
   const [isSaving, setIsSaving] = useState(false)
   const [isUsingCard, setIsUsingCard] = useState(false)
 
+  const isKnockout = match.round !== 'Fase de grupos'
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -682,6 +684,8 @@ function MatchCard({
     const formData = new FormData(event.currentTarget)
     const homeScore = Number(formData.get('homeScore'))
     const awayScore = Number(formData.get('awayScore'))
+    const guessWinnerTeamRaw = String(formData.get('guessWinnerTeam') || '').trim()
+    const guessWinnerTeam = guessWinnerTeamRaw || null
 
     if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
       setError('Informe placares válidos.')
@@ -696,6 +700,7 @@ function MatchCard({
           matchId: match.id,
           homeScore,
           awayScore,
+          guessWinnerTeam,
         },
       })
       await router.invalidate()
@@ -755,6 +760,7 @@ function MatchCard({
           <div className="mb-4 rounded-md border border-[var(--line)] bg-white/70 p-3 text-center text-sm font-bold">
             <span>
               Resultado: {match.homeScore} x {match.awayScore}
+              {match.winnerTeam && isKnockout ? ` · classificado: ${match.winnerTeam}` : ''}
             </span>
             {match.oddsMultiplier && match.oddsMultiplier > 1 ? (
               <span
@@ -772,37 +778,58 @@ function MatchCard({
           </div>
         ) : null}
         <form
-          className="grid gap-3 sm:grid-cols-[1fr_auto]"
+          className="grid gap-3"
           onSubmit={handleSubmit}
         >
-          <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-            <ScoreInput
-              label={match.homeTeam}
-              name="homeScore"
-              defaultValue={match.guess?.homeScore}
-              disabled={!canGuess || isLocked}
-            />
-            <span className="pb-2 text-center text-lg font-black">x</span>
-            <ScoreInput
-              label={match.awayTeam}
-              name="awayScore"
-              defaultValue={match.guess?.awayScore}
-              disabled={!canGuess || isLocked}
-            />
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+              <ScoreInput
+                label={match.homeTeam}
+                name="homeScore"
+                defaultValue={match.guess?.homeScore}
+                disabled={!canGuess || isLocked}
+              />
+              <span className="pb-2 text-center text-lg font-black">x</span>
+              <ScoreInput
+                label={match.awayTeam}
+                name="awayScore"
+                defaultValue={match.guess?.awayScore}
+                disabled={!canGuess || isLocked}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={!canGuess || isLocked || isSaving}
+              className="self-end"
+            >
+              {isLocked ? <Lock /> : <Save />}
+              {isLocked ? 'Bloqueado' : isSaving ? 'Salvando...' : 'Salvar'}
+            </Button>
           </div>
-          <Button
-            type="submit"
-            disabled={!canGuess || isLocked || isSaving}
-            className="self-end"
-          >
-            {isLocked ? <Lock /> : <Save />}
-            {isLocked ? 'Bloqueado' : isSaving ? 'Salvando...' : 'Salvar'}
-          </Button>
+          {isKnockout ? (
+            <div className="grid gap-1.5">
+              <label htmlFor={`guessWinner-${match.id}`} className="text-xs font-semibold text-[var(--sea-ink-soft)]">
+                Classificado <span className="font-normal opacity-70">(quem avança — obrigatório no empate)</span>
+              </label>
+              <select
+                id={`guessWinner-${match.id}`}
+                name="guessWinnerTeam"
+                defaultValue={match.guess?.guessWinnerTeam ?? ''}
+                disabled={!canGuess || isLocked}
+                className="h-10 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-bold outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                <option value="">Automático (quem vencer no placar)</option>
+                <option value={match.homeTeam}>{match.homeTeam}</option>
+                <option value={match.awayTeam}>{match.awayTeam}</option>
+              </select>
+            </div>
+          ) : null}
         </form>
         {match.guess ? (
           <div className="mt-3 space-y-1">
             <p className="text-sm font-semibold text-[var(--sea-ink-soft)]">
               Seu palpite: {match.guess.homeScore} x {match.guess.awayScore}
+              {match.guess.guessWinnerTeam ? ` · avança: ${match.guess.guessWinnerTeam}` : ''}
               {hasResult
                 ? ` · ${match.guess.points} ponto(s)`
                 : ''}

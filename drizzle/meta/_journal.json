@@ -50,6 +50,13 @@
       "when": 1782135409886,
       "tag": "0006_wise_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782761426634,
+      "tag": "0007_clammy_diamondback",
+      "breakpoints": true
     }
   ]
 }
